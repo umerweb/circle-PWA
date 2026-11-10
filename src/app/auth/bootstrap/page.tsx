@@ -96,7 +96,7 @@ export default function BootstrapAdminPage() {
               type="email"
               disabled
               value={email}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 font-mono text-slate-600 text-sm"
+              className="w-full px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 font-mono text-slate-600 text-base sm:text-sm"
             />
             <p className="text-[11px] text-slate-400 mt-1">
               Designated initial administrator as per PRD specifications.
@@ -110,7 +110,7 @@ export default function BootstrapAdminPage() {
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm"
+              className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm"
             />
           </div>
 
@@ -124,7 +124,7 @@ export default function BootstrapAdminPage() {
               placeholder="Minimum 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm"
+              className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm"
             />
           </div>
 
@@ -138,14 +138,14 @@ export default function BootstrapAdminPage() {
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm"
+              className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading || success}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99]"
           >
             <KeyRound className="w-4 h-4" />
             <span>{loading ? t.common.loading : t.auth.bootstrapAction}</span>

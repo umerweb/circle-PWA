@@ -19,13 +19,17 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Circle Fund',
   },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: '#15803d',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -34,16 +38,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="font-sans antialiased bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
+      <body className="h-full font-sans antialiased bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 overscroll-y-none">
         <I18nProvider>
           <AuthProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />
-              <main className="flex-1 pb-20 lg:pb-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <main className="flex-1 pb-24 lg:pb-12 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6">
                 {children}
               </main>
               <MobileNav />

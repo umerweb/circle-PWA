@@ -11,13 +11,13 @@ import {
   Clock,
   AlertCircle,
   Search,
-  Filter,
   Check,
   Send,
   PlusCircle,
-  ShieldAlert,
   Phone,
   UserCheck,
+  ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 
 export default function MonthlyFundPage() {
@@ -168,12 +168,12 @@ export default function MonthlyFundPage() {
   const collectorContribution = contributions.find((c) => c.is_collector_contribution);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {t.fund.title}: {fund?.title}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
@@ -181,11 +181,11 @@ export default function MonthlyFundPage() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Expected: 50 DKK per member · MobilePay Collector: {fund?.collector_name} ({fund?.mobilepay_number})
+            50 DKK per member · Collector: <span className="font-semibold text-slate-800">{fund?.collector_name}</span> ({fund?.mobilepay_number})
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <WhatsAppShare
             collectorName={fund?.collector_name}
             mobilepayNumber={fund?.mobilepay_number}
@@ -195,7 +195,7 @@ export default function MonthlyFundPage() {
           {user?.role === 'admin' && (
             <button
               onClick={() => setNewFundModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Open Next Month</span>
@@ -206,30 +206,30 @@ export default function MonthlyFundPage() {
 
       {/* Collector's Own Contribution Card */}
       {collectorContribution && (
-        <div className="bg-slate-900 text-white rounded-xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <div className="bg-slate-900 text-white rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0">
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
+              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
                 {t.fund.collectorSelfContribution}
               </span>
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="text-sm font-semibold text-white mt-0.5">
                 {collectorContribution.member_name} ({formatCurrency(Number(collectorContribution.amount))})
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                The collector records and contributes their own 50 DKK directly to the fund.
+                Collector contributes and verifies their own 50 DKK directly.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 self-end sm:self-center">
             <Badge status={collectorContribution.status} label={collectorContribution.status.toUpperCase()} />
             {canConfirm && collectorContribution.status !== 'confirmed' && (
               <button
                 onClick={() => handleConfirmPayment(collectorContribution.id, 50.0)}
                 disabled={actionLoading === collectorContribution.id}
-                className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700"
+                className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:scale-95 transition-transform"
               >
                 {t.fund.recordCollectorPaid}
               </button>
@@ -238,8 +238,8 @@ export default function MonthlyFundPage() {
         </div>
       )}
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary KPI Cards (2x2 on mobile, 4 columns on desktop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <StatCard
           title={t.fund.target}
           value={formatCurrency(Number(fund?.computedTarget || 2000))}
@@ -251,26 +251,26 @@ export default function MonthlyFundPage() {
           subtitle={`${fund?.paidCount || 0} confirmed in MobilePay`}
         />
         <StatCard
-          title="Awaiting Confirmation"
+          title="Awaiting"
           value={formatCurrency(Number(fund?.totalReported || 0))}
-          subtitle={`${fund?.reportedCount || 0} reported by members`}
+          subtitle={`${fund?.reportedCount || 0} reported`}
         />
         <StatCard
           title={t.fund.outstanding}
           value={formatCurrency(Math.max(0, Number(fund?.computedTarget || 2000) - Number(fund?.computedCollected || 0)))}
-          subtitle={`${fund?.pendingCount || 0} still pending`}
+          subtitle={`${fund?.pendingCount || 0} pending`}
         />
       </div>
 
-      {/* Search and Tabs Filter */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs">
+      {/* Search and Tabs Filter Bar */}
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
+        {/* Horizontal Touch-Scrollable Filter Chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs scrollbar-none">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 ${
               filter === 'all'
-                ? 'bg-slate-900 text-white font-semibold'
+                ? 'bg-slate-900 text-white font-semibold shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -278,9 +278,9 @@ export default function MonthlyFundPage() {
           </button>
           <button
             onClick={() => setFilter('reported')}
-            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 ${
               filter === 'reported'
-                ? 'bg-sky-700 text-white font-semibold'
+                ? 'bg-sky-700 text-white font-semibold shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -288,9 +288,9 @@ export default function MonthlyFundPage() {
           </button>
           <button
             onClick={() => setFilter('confirmed')}
-            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 ${
               filter === 'confirmed'
-                ? 'bg-emerald-700 text-white font-semibold'
+                ? 'bg-emerald-700 text-white font-semibold shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -298,9 +298,9 @@ export default function MonthlyFundPage() {
           </button>
           <button
             onClick={() => setFilter('pending')}
-            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors shrink-0 ${
               filter === 'pending'
-                ? 'bg-amber-700 text-white font-semibold'
+                ? 'bg-amber-700 text-white font-semibold shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -308,21 +308,112 @@ export default function MonthlyFundPage() {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative min-w-[240px]">
+        {/* Search Input */}
+        <div className="relative w-full sm:w-64 shrink-0">
           <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
             placeholder="Search member name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+            className="w-full pl-9 pr-3 py-2 text-base sm:text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
           />
         </div>
       </div>
 
-      {/* Contributions Table */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
+      {/* MOBILE CARD FEED (< md screens) */}
+      <div className="md:hidden space-y-2.5">
+        {filteredContributions.map((c) => {
+          const isMine = user && (c.member_id === user.id || c.member_email === user.email);
+          return (
+            <div
+              key={c.id}
+              className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-xs space-y-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-semibold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
+                    <span>{c.member_name}</span>
+                    {c.is_collector_contribution && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-800 font-bold">
+                        Collector
+                      </span>
+                    )}
+                    {c.member_is_demo && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-500">
+                        demo
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-500">{c.member_email}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-mono font-bold text-slate-900 text-sm">
+                    {formatCurrency(Number(c.amount))}
+                  </div>
+                  <Badge
+                    status={c.status}
+                    label={t.fund.status[c.status as keyof typeof t.fund.status]}
+                  />
+                </div>
+              </div>
+
+              {(c.payment_reference || c.member_note || c.exception_reason) && (
+                <div className="bg-slate-50 p-2 rounded-lg text-xs text-slate-600 font-mono">
+                  {c.payment_reference || c.member_note || c.exception_reason}
+                </div>
+              )}
+
+              {/* Action Buttons on Mobile Card */}
+              <div className="pt-1 flex items-center justify-between border-t border-slate-100 text-[11px] text-slate-400">
+                <span>{c.reported_at ? `Reported ${formatDate(c.reported_at)}` : 'Pending'}</span>
+
+                <div className="flex items-center gap-1.5">
+                  {isMine && c.status === 'pending' && (
+                    <button
+                      onClick={() => handleReportMyPayment(c.id)}
+                      disabled={actionLoading === c.id}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-700 text-white font-semibold text-xs active:scale-95"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Mark Paid</span>
+                    </button>
+                  )}
+
+                  {canConfirm && c.status !== 'confirmed' && (
+                    <button
+                      onClick={() => handleConfirmPayment(c.id, Number(c.amount))}
+                      disabled={actionLoading === c.id}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold text-xs shadow-xs active:scale-95"
+                    >
+                      <Check className="w-3 h-3" />
+                      <span>Confirm Receipt</span>
+                    </button>
+                  )}
+
+                  {user?.role === 'admin' && c.status === 'pending' && (
+                    <button
+                      onClick={() => setExceptionModal(c.id)}
+                      className="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs hover:bg-slate-50"
+                    >
+                      Exempt
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {filteredContributions.length === 0 && (
+          <div className="p-8 text-center text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
+            No matching contributions found.
+          </div>
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (>= md screens) */}
+      <div className="hidden md:block bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
@@ -341,23 +432,21 @@ export default function MonthlyFundPage() {
                 return (
                   <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <div className="font-semibold text-slate-900 flex items-center gap-1.5">
-                            <span>{c.member_name}</span>
-                            {c.is_collector_contribution && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-800 font-bold">
-                                Collector
-                              </span>
-                            )}
-                            {c.member_is_demo && (
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-500">
-                                demo
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-slate-500">{c.member_email}</div>
+                      <div>
+                        <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                          <span>{c.member_name}</span>
+                          {c.is_collector_contribution && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-800 font-bold">
+                              Collector
+                            </span>
+                          )}
+                          {c.member_is_demo && (
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-500">
+                              demo
+                            </span>
+                          )}
                         </div>
+                        <div className="text-[11px] text-slate-500">{c.member_email}</div>
                       </div>
                     </td>
                     <td className="py-3 px-4 font-mono font-semibold text-slate-900">
@@ -377,7 +466,6 @@ export default function MonthlyFundPage() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* Member can report payment sent if pending */}
                         {isMine && c.status === 'pending' && (
                           <button
                             onClick={() => handleReportMyPayment(c.id)}
@@ -389,20 +477,18 @@ export default function MonthlyFundPage() {
                           </button>
                         )}
 
-                        {/* Collector / Admin can verify receipt in MobilePay */}
                         {canConfirm && c.status !== 'confirmed' && (
                           <button
                             onClick={() => handleConfirmPayment(c.id, Number(c.amount))}
                             disabled={actionLoading === c.id}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-700 text-white font-medium hover:bg-emerald-800 transition-colors shadow-sm"
-                            title="Confirm that money is received in MobilePay"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-700 text-white font-medium hover:bg-emerald-800 transition-colors shadow-xs"
+                            title="Confirm receipt in MobilePay"
                           >
                             <Check className="w-3 h-3" />
                             <span>Confirm Receipt</span>
                           </button>
                         )}
 
-                        {/* Admin can grant exception */}
                         {user?.role === 'admin' && c.status === 'pending' && (
                           <button
                             onClick={() => setExceptionModal(c.id)}
@@ -416,22 +502,15 @@ export default function MonthlyFundPage() {
                   </tr>
                 );
               })}
-              {filteredContributions.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    No matching contributions found.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal: Grant Exception */}
+      {/* Modal: Grant Exception (Mobile Bottom Sheet / Center Dialog) */}
       {exceptionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4 pb-safe">
             <h3 className="text-sm font-bold text-slate-900">Grant Approved Exception</h3>
             <form onSubmit={handleGrantException} className="space-y-3">
               <div>
@@ -444,20 +523,20 @@ export default function MonthlyFundPage() {
                   placeholder="e.g. Temporary leave, medical exception"
                   value={exceptionReason}
                   onChange={(e) => setExceptionReason(e.target.value)}
-                  className="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setExceptionModal(null)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800"
                 >
                   Save Exemption
                 </button>
@@ -469,8 +548,8 @@ export default function MonthlyFundPage() {
 
       {/* Modal: Open Next Month's Fund */}
       {newFundModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4 pb-safe">
             <h3 className="text-sm font-bold text-slate-900">Open Next Monthly Fund</h3>
             <form onSubmit={handleCreateNewFund} className="space-y-3 text-xs">
               <div>
@@ -482,7 +561,7 @@ export default function MonthlyFundPage() {
                   required
                   value={newMonth}
                   onChange={(e) => setNewMonth(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div>
@@ -493,21 +572,21 @@ export default function MonthlyFundPage() {
                   required
                   value={newYear}
                   onChange={(e) => setNewYear(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setNewFundModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading === 'create_fund'}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800"
                 >
                   {actionLoading === 'create_fund' ? t.common.loading : 'Create Collection'}
                 </button>

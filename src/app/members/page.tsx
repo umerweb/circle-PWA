@@ -9,17 +9,15 @@ import {
   UserPlus,
   Trash2,
   Search,
-  Filter,
   Edit2,
-  Shield,
   Phone,
-  Mail,
   AlertTriangle,
   CheckCircle2,
+  PhoneCall,
 } from 'lucide-react';
 
 export default function MembersPage() {
-  const { t, formatDate } = useI18n();
+  const { t } = useI18n();
   const { user } = useAuth();
   const [members, setMembers] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -153,31 +151,31 @@ export default function MembersPage() {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             {t.members.title}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5">
             {t.members.subtitle}
           </p>
         </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setPurgeConfirmModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-colors"
-              title="Remove all placeholder demo records before real production use"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-colors active:scale-95 shadow-xs"
+              title="Remove placeholder demo records before real production use"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>{t.members.removeDemoData}</span>
             </button>
             <button
               onClick={() => setAddModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>{t.members.addMember}</span>
@@ -187,52 +185,52 @@ export default function MembersPage() {
       </div>
 
       {notificationMsg && (
-        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between">
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{notificationMsg}</span>
           </div>
-          <button onClick={() => setNotificationMsg(null)} className="text-emerald-700 hover:text-emerald-900 font-bold">
+          <button onClick={() => setNotificationMsg(null)} className="text-emerald-700 hover:text-emerald-900 font-bold p-1">
             &times;
           </button>
         </div>
       )}
 
-      {/* KPI Counters */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      {/* KPI Counters: 3 compact columns */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
             {t.members.totalMembers}
           </span>
-          <div className="text-2xl font-bold font-mono text-slate-900 mt-1">
+          <div className="text-lg sm:text-2xl font-bold font-mono text-slate-900 mt-0.5">
             {summary?.total_members || members.length}
           </div>
         </div>
-        <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
             {t.members.activeCount}
           </span>
-          <div className="text-2xl font-bold font-mono text-emerald-700 mt-1">
+          <div className="text-lg sm:text-2xl font-bold font-mono text-emerald-700 mt-0.5">
             {summary?.active_count || members.filter((m) => m.status === 'active').length}
           </div>
         </div>
-        <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
             {t.members.demoCount}
           </span>
-          <div className="text-2xl font-bold font-mono text-slate-500 mt-1">
+          <div className="text-lg sm:text-2xl font-bold font-mono text-slate-500 mt-0.5">
             {summary?.demo_count || members.filter((m) => m.is_demo).length}
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs">
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-3">
+        <div className="flex items-center gap-2 text-xs flex-wrap">
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 text-base sm:text-xs"
           >
             <option value="all">All Roles</option>
             <option value="admin">Administrators</option>
@@ -243,7 +241,7 @@ export default function MembersPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 text-base sm:text-xs"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -251,20 +249,99 @@ export default function MembersPage() {
           </select>
         </div>
 
-        <form onSubmit={handleSearch} className="relative min-w-[260px]">
+        <form onSubmit={handleSearch} className="relative w-full sm:w-64">
           <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
             placeholder={t.members.searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+            className="w-full pl-9 pr-3 py-2 text-base sm:text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
           />
         </form>
       </div>
 
-      {/* Members Table */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
+      {/* MOBILE CARD FEED (< md screens) */}
+      <div className="md:hidden space-y-2.5">
+        {members.map((m) => (
+          <div
+            key={m.id}
+            className="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-xs space-y-2.5"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="font-semibold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
+                  <span>{m.full_name}</span>
+                  {m.is_demo && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500">
+                      demo
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-500">{m.email}</div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    m.role === 'admin'
+                      ? 'bg-purple-100 text-purple-800'
+                      : m.role === 'collector'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {m.role}
+                </span>
+                <Badge
+                  status={m.status}
+                  label={t.members.statuses[m.status as keyof typeof t.members.statuses] || m.status}
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+              <div className="flex items-center gap-1.5 font-mono">
+                {m.mobilepay_number || m.phone ? (
+                  <a
+                    href={`tel:${m.mobilepay_number || m.phone}`}
+                    className="flex items-center gap-1 text-emerald-800 font-semibold hover:underline"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{m.mobilepay_number || m.phone}</span>
+                  </a>
+                ) : (
+                  <span className="text-slate-400">No MobilePay</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-500">
+                  Paid: <strong className="font-mono text-slate-800">{m.confirmed_payments_count || 0} mo</strong>
+                </span>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => setEditModal(m)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100"
+                    title="Edit member"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {members.length === 0 && (
+          <div className="p-8 text-center text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
+            No members found.
+          </div>
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (>= md screens) */}
+      <div className="hidden md:block bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
@@ -328,22 +405,15 @@ export default function MembersPage() {
                   )}
                 </tr>
               ))}
-              {members.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
-                    No members found.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal: Add Member Manually */}
+      {/* Modal: Add Member Manually (Mobile Bottom Sheet / Center Dialog) */}
       {addModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 pb-safe">
             <h3 className="text-base font-bold text-slate-900">{t.members.addMember}</h3>
             <form onSubmit={handleAddMember} className="space-y-3 text-xs">
               <div>
@@ -354,7 +424,7 @@ export default function MembersPage() {
                   placeholder="e.g. Mads Mikkelsen"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div>
@@ -365,7 +435,7 @@ export default function MembersPage() {
                   placeholder="mads@example.dk"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div>
@@ -378,7 +448,7 @@ export default function MembersPage() {
                     setFormMobilePay(e.target.value);
                     setFormPhone(e.target.value);
                   }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
               <div>
@@ -386,7 +456,7 @@ export default function MembersPage() {
                 <select
                   value={formRole}
                   onChange={(e) => setFormRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 bg-white"
                 >
                   <option value="member">Member</option>
                   <option value="collector">Collector</option>
@@ -398,14 +468,14 @@ export default function MembersPage() {
                 <button
                   type="button"
                   onClick={() => setAddModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
+                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
                 >
                   {formLoading ? t.common.loading : t.common.save}
                 </button>
@@ -417,8 +487,8 @@ export default function MembersPage() {
 
       {/* Modal: Edit Member */}
       {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 pb-safe">
             <h3 className="text-base font-bold text-slate-900">{t.members.edit}</h3>
             <form onSubmit={handleEditMember} className="space-y-3 text-xs">
               <div>
@@ -428,7 +498,7 @@ export default function MembersPage() {
                   required
                   value={editModal.full_name}
                   onChange={(e) => setEditModal({ ...editModal, full_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div>
@@ -437,7 +507,7 @@ export default function MembersPage() {
                   type="text"
                   value={editModal.mobilepay_number || ''}
                   onChange={(e) => setEditModal({ ...editModal, mobilepay_number: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -446,7 +516,7 @@ export default function MembersPage() {
                   <select
                     value={editModal.role}
                     onChange={(e) => setEditModal({ ...editModal, role: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white"
                   >
                     <option value="member">Member</option>
                     <option value="collector">Collector</option>
@@ -458,7 +528,7 @@ export default function MembersPage() {
                   <select
                     value={editModal.status}
                     onChange={(e) => setEditModal({ ...editModal, status: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white"
                   >
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
@@ -470,14 +540,14 @@ export default function MembersPage() {
                 <button
                   type="button"
                   onClick={() => setEditModal(null)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
+                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
                 >
                   {formLoading ? t.common.loading : t.common.save}
                 </button>
@@ -489,8 +559,8 @@ export default function MembersPage() {
 
       {/* Modal: Confirm Purge Demo Data */}
       {purgeConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 pb-safe">
             <div className="flex items-center gap-3 text-rose-600">
               <AlertTriangle className="w-6 h-6 shrink-0" />
               <h3 className="text-base font-bold text-slate-900">{t.members.removeDemoData}</h3>
@@ -498,24 +568,24 @@ export default function MembersPage() {
             <p className="text-xs text-slate-600 leading-relaxed">
               {t.members.confirmRemoveDemo}
             </p>
-            <div className="p-3 bg-amber-50 rounded-lg text-[11px] text-amber-800 border border-amber-200">
-              Note: This action safely deletes only placeholder test records marked with <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">is_demo=true</code>. The administrator account and any real members you added will be preserved.
+            <div className="p-3 bg-amber-50 rounded-xl text-[11px] text-amber-800 border border-amber-200">
+              Note: Deletes only placeholder records marked with <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">is_demo=true</code>. The administrator account and any real members added will be preserved.
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setPurgeConfirmModal(false)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 hover:bg-slate-100"
+                className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-600 hover:bg-slate-100"
               >
                 {t.common.cancel}
               </button>
               <button
                 onClick={handlePurgeDemoData}
                 disabled={formLoading}
-                className="px-4 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
+                className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
               >
-                {formLoading ? t.common.loading : 'Yes, Purge Demo Members'}
+                {formLoading ? t.common.loading : 'Yes, Purge'}
               </button>
             </div>
           </div>

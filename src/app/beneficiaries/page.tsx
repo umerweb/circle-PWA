@@ -9,13 +9,11 @@ import {
   HeartHandshake,
   PlusCircle,
   ShieldCheck,
-  ShieldAlert,
-  Calendar,
-  FileText,
   DollarSign,
-  Tag,
   Eye,
   EyeOff,
+  Receipt,
+  Calendar,
 } from 'lucide-react';
 
 export default function BeneficiariesPage() {
@@ -133,30 +131,30 @@ export default function BeneficiariesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             {t.beneficiaries.title}
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5">
             {t.beneficiaries.subtitle}
           </p>
         </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setDistModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold transition-colors shadow-xs active:scale-95"
             >
               <DollarSign className="w-3.5 h-3.5" />
               <span>{t.beneficiaries.recordDistribution}</span>
             </button>
             <button
               onClick={() => setAddBenModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>{t.beneficiaries.addBeneficiary}</span>
@@ -166,13 +164,13 @@ export default function BeneficiariesPage() {
       </div>
 
       {/* Privacy Notice Banner */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 flex items-start gap-3">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 text-xs text-slate-600 flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
           {t.beneficiaries.anonymousNotice}{' '}
           {isAdmin ? (
             <span className="font-semibold text-emerald-800">
-              (You are logged in as Administrator; unredacted identity details are visible).
+              (Logged in as Administrator: confidential identity details are visible).
             </span>
           ) : (
             <span className="font-semibold text-slate-700">
@@ -182,8 +180,8 @@ export default function BeneficiariesPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Stats Cards: 2 columns */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
         <StatCard
           title="Total Aid Distributed"
           value={formatCurrency(Number(stats?.total_distributed || 800))}
@@ -194,7 +192,7 @@ export default function BeneficiariesPage() {
         <StatCard
           title="Beneficiary Cases"
           value={`${beneficiaries.length} Cases`}
-          subtitle="Medical, Education & Living support"
+          subtitle="Medical, Education, Living"
           trend="Active"
         />
       </div>
@@ -202,15 +200,15 @@ export default function BeneficiariesPage() {
       {/* Beneficiary Cases Grid */}
       <div className="space-y-3">
         <h2 className="text-sm font-bold text-slate-900">Active Support Cases</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {beneficiaries.map((b) => (
             <div
               key={b.id}
-              className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-sm space-y-3 hover:border-slate-300 transition-all"
+              className="bg-white border border-slate-200/80 rounded-xl p-4 sm:p-5 shadow-xs space-y-3 hover:border-slate-300 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <h3 className="font-bold text-slate-900 text-sm">{b.full_name}</h3>
                     {b.is_anonymous ? (
                       <span className="flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
@@ -226,15 +224,15 @@ export default function BeneficiariesPage() {
                     {t.beneficiaries.categories[b.category as keyof typeof t.beneficiaries.categories] || b.category}
                   </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-[11px] text-slate-400 block">{t.beneficiaries.totalReceived}</span>
+                <div className="text-right shrink-0">
+                  <span className="text-[10px] text-slate-400 block">{t.beneficiaries.totalReceived}</span>
                   <span className="font-mono font-bold text-slate-900 text-sm">
                     {formatCurrency(Number(b.total_allocated))}
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 {b.reason}
               </p>
 
@@ -248,12 +246,38 @@ export default function BeneficiariesPage() {
         </div>
       </div>
 
-      {/* Distribution History Table */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden space-y-3 p-4">
+      {/* Distribution History Container */}
+      <div className="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden space-y-3 p-4">
         <h2 className="text-sm font-bold text-slate-900">
           {t.beneficiaries.distributionsList}
         </h2>
-        <div className="overflow-x-auto">
+
+        {/* MOBILE CARD FEED (< md) */}
+        <div className="md:hidden space-y-2.5">
+          {distributions.map((d) => (
+            <div key={d.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-900">{d.raw_full_name}</span>
+                <span className="font-mono font-bold text-slate-900 text-sm">
+                  {formatCurrency(Number(d.amount))}
+                </span>
+              </div>
+              <p className="text-slate-600">{d.description}</p>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-200/60 font-mono">
+                <span>{formatDate(d.distribution_date)}</span>
+                {d.evidence_reference && (
+                  <span className="flex items-center gap-1 text-slate-600">
+                    <Receipt className="w-3 h-3 text-slate-400" />
+                    {d.evidence_reference}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* DESKTOP TABLE (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
               <tr>
@@ -284,13 +308,6 @@ export default function BeneficiariesPage() {
                   </td>
                 </tr>
               ))}
-              {distributions.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-400">
-                    No distributions recorded yet.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
@@ -298,8 +315,8 @@ export default function BeneficiariesPage() {
 
       {/* Modal: Add Beneficiary */}
       {addBenModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 pb-safe">
             <h3 className="text-base font-bold text-slate-900">{t.beneficiaries.addBeneficiary}</h3>
             <form onSubmit={handleAddBeneficiary} className="space-y-3 text-xs">
               <div>
@@ -312,7 +329,7 @@ export default function BeneficiariesPage() {
                   placeholder="e.g. Lars Jensen"
                   value={benName}
                   onChange={(e) => setBenName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div>
@@ -324,7 +341,7 @@ export default function BeneficiariesPage() {
                   placeholder="e.g. Community Family #2"
                   value={benAlias}
                   onChange={(e) => setBenAlias(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div>
@@ -332,7 +349,7 @@ export default function BeneficiariesPage() {
                 <select
                   value={benCategory}
                   onChange={(e) => setBenCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white"
                 >
                   <option value="medical">Medical & Healthcare</option>
                   <option value="education">Education & Learning</option>
@@ -351,7 +368,7 @@ export default function BeneficiariesPage() {
                   placeholder="Describe the community need..."
                   value={benReason}
                   onChange={(e) => setBenReason(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div>
@@ -363,7 +380,7 @@ export default function BeneficiariesPage() {
                   placeholder="Phone, email or address (kept private)"
                   value={benContact}
                   onChange={(e) => setBenContact(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div className="flex items-center gap-2 pt-1">
@@ -372,9 +389,9 @@ export default function BeneficiariesPage() {
                   id="isAnon"
                   checked={benIsAnon}
                   onChange={(e) => setBenIsAnon(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
+                  className="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4"
                 />
-                <label htmlFor="isAnon" className="font-medium text-slate-700">
+                <label htmlFor="isAnon" className="font-medium text-slate-700 text-xs">
                   {t.beneficiaries.isAnonymous}
                 </label>
               </div>
@@ -383,14 +400,14 @@ export default function BeneficiariesPage() {
                 <button
                   type="button"
                   onClick={() => setAddBenModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
+                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
                 >
                   {formLoading ? t.common.loading : t.common.save}
                 </button>
@@ -402,8 +419,8 @@ export default function BeneficiariesPage() {
 
       {/* Modal: Record Distribution */}
       {distModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 space-y-4 pb-safe">
             <h3 className="text-base font-bold text-slate-900">{t.beneficiaries.recordDistribution}</h3>
             <form onSubmit={handleRecordDistribution} className="space-y-3 text-xs">
               <div>
@@ -412,7 +429,7 @@ export default function BeneficiariesPage() {
                   required
                   value={selectedBenId}
                   onChange={(e) => setSelectedBenId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white"
                 >
                   <option value="">-- Choose Beneficiary --</option>
                   {beneficiaries.map((b) => (
@@ -433,17 +450,17 @@ export default function BeneficiariesPage() {
                     placeholder="e.g. 500.00"
                     value={distAmount}
                     onChange={(e) => setDistAmount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                    className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Disbursement Date</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Date</label>
                   <input
                     type="date"
                     required
                     value={distDate}
                     onChange={(e) => setDistDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                   />
                 </div>
               </div>
@@ -455,7 +472,7 @@ export default function BeneficiariesPage() {
                   placeholder="e.g. Medical prescription subsidy"
                   value={distDescription}
                   onChange={(e) => setDistDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
               <div>
@@ -467,7 +484,7 @@ export default function BeneficiariesPage() {
                   placeholder="e.g. KVIT-2026-MED-042"
                   value={distReceipt}
                   onChange={(e) => setDistReceipt(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
 
@@ -475,14 +492,14 @@ export default function BeneficiariesPage() {
                 <button
                   type="button"
                   onClick={() => setDistModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
                 >
                   {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
+                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
                 >
                   {formLoading ? t.common.loading : 'Record Disbursement'}
                 </button>

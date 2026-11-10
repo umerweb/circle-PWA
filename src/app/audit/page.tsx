@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '@/lib/i18n/context';
-import { History, Shield, Filter, Search, Terminal } from 'lucide-react';
+import { History, Filter } from 'lucide-react';
 
 export default function AuditPage() {
   const { t, formatDate } = useI18n();
@@ -28,26 +28,26 @@ export default function AuditPage() {
   }, [selectedAction]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="pb-2 border-b border-slate-200">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
           {t.audit.title}
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-500 mt-0.5">
           {t.audit.subtitle}
         </p>
       </div>
 
       {/* Filter */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <span className="font-semibold text-slate-700">Filter Event:</span>
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs flex-wrap">
+          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+          <span className="font-semibold text-slate-700">Filter:</span>
           <select
             value={selectedAction}
             onChange={(e) => setSelectedAction(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-700 text-base sm:text-xs"
           >
             <option value="all">All Events</option>
             <option value="PAYMENT_CONFIRMED">PAYMENT_CONFIRMED</option>
@@ -64,8 +64,38 @@ export default function AuditPage() {
         </span>
       </div>
 
-      {/* Audit Log Entries List */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
+      {/* MOBILE CARD FEED (< md) */}
+      <div className="md:hidden space-y-2">
+        {logs.map((log) => (
+          <div key={log.id} className="bg-white rounded-xl border border-slate-200/80 p-3 shadow-xs space-y-1.5 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 font-mono">
+                {log.action}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {new Date(log.created_at).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-slate-500 font-semibold">{log.entity_type}</span>
+              <span className="text-slate-800 font-medium">{log.actor_name || log.actor_email}</span>
+            </div>
+            {log.details && (
+              <div className="p-2 bg-slate-50 rounded-lg text-[10px] font-mono text-slate-600 break-all border border-slate-100">
+                {JSON.stringify(log.details)}
+              </div>
+            )}
+          </div>
+        ))}
+        {logs.length === 0 && (
+          <div className="p-8 text-center text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
+            No audit log records found.
+          </div>
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (>= md) */}
+      <div className="hidden md:block bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-semibold">
@@ -109,13 +139,6 @@ export default function AuditPage() {
                   </td>
                 </tr>
               ))}
-              {logs.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 font-sans">
-                    No audit log records found.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
