@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
         // Delete collector volunteers
         await client.query(`DELETE FROM public.collector_volunteers WHERE member_id = $1`, [memberId]);
         // Delete notifications
-        await client.query(`DELETE FROM public.notifications WHERE user_id = $1`, [memberId]);
+        await client.query(`DELETE FROM public.notifications WHERE recipient_id = $1`, [memberId]);
         // Delete profile
         const delRes = await client.query(`DELETE FROM public.profiles WHERE id = $1 RETURNING *`, [memberId]);
 

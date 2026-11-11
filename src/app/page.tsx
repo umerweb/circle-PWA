@@ -111,6 +111,7 @@ export default function DashboardPage() {
   }
 
   const fund = data?.fund;
+  const minThreshold = Number(fund?.min_contribution || 50);
   const target = Number(fund?.target_amount || fund?.computedTarget || 2000);
   const collected = Number(fund?.collected_amount || fund?.computedCollected || 0);
   const progressPercent = target > 0 ? Math.min(100, Math.round((collected / target) * 100)) : 0;
@@ -143,7 +144,7 @@ export default function DashboardPage() {
             collectorName={fund?.collector_name || 'Demo Member 1'}
             mobilepayNumber={mobilePayNum}
             monthTitle={fund?.title || 'November 2026'}
-            amount={50}
+            amount={minThreshold}
           />
         </div>
       </div>
@@ -198,7 +199,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-xs sm:text-sm text-slate-900">
-                  {t.dashboard.quickPayAction}: {formatCurrency(50)}
+                  {t.dashboard.quickPayAction}: {formatCurrency(minThreshold)}
                 </span>
                 <Badge
                   status={myContribution.status}
@@ -210,7 +211,7 @@ export default function DashboardPage() {
                   ? 'Your monthly contribution has been verified by the collector in MobilePay.'
                   : myContribution.status === 'reported'
                   ? 'You marked payment as sent. Awaiting collector MobilePay confirmation.'
-                  : 'Please transfer 50 DKK via MobilePay to the collector and mark it below.'}
+                  : `Please transfer ${minThreshold} DKK via MobilePay to the collector and mark it below.`}
               </p>
             </div>
           </div>
@@ -234,10 +235,10 @@ export default function DashboardPage() {
             <AlertCircle className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold text-xs sm:text-sm text-slate-900">
-                Monthly Contribution: {formatCurrency(50)}
+                Monthly Contribution: {formatCurrency(minThreshold)}
               </span>
               <p className="text-[11px] sm:text-xs text-slate-600 mt-1">
-                Welcome to the circle! Transfer 50 DKK via MobilePay to the monthly collector and record your payment.
+                Welcome to the circle! Transfer {minThreshold} DKK via MobilePay to the monthly collector and record your payment.
               </p>
             </div>
           </div>
@@ -256,7 +257,7 @@ export default function DashboardPage() {
         <StatCard
           title={t.dashboard.monthlyTarget}
           value={formatCurrency(target)}
-          subtitle={`40 ${t.members.roles.member.toLowerCase()}`}
+          subtitle={`${fund?.totalMembers || 0} active members`}
           icon={<TrendingUp className="w-4 h-4" />}
           trend={`${progressPercent}%`}
           trendType="positive"
@@ -271,18 +272,18 @@ export default function DashboardPage() {
         />
         <StatCard
           title={t.dashboard.paidMembers}
-          value={`${paidCount}/${fund?.totalMembers || 40}`}
+          value={`${paidCount}/${fund?.totalMembers || 0}`}
           subtitle={`${reportedCount} pending verification`}
           icon={<Users className="w-4 h-4" />}
-          trend={`${Math.round((paidCount / (fund?.totalMembers || 40)) * 100)}%`}
+          trend={`${fund?.totalMembers ? Math.round((paidCount / fund.totalMembers) * 100) : 0}%`}
           trendType="positive"
         />
         <StatCard
           title={t.dashboard.pendingMembers}
           value={`${pendingCount}`}
-          subtitle="Expected: 50 DKK"
+          subtitle={`Expected: ${formatCurrency(minThreshold)}`}
           icon={<Clock className="w-4 h-4" />}
-          trend={`${pendingCount * 50} DKK pending`}
+          trend={`${formatCurrency(pendingCount * minThreshold)} pending`}
           trendType="neutral"
         />
       </div>
@@ -457,7 +458,7 @@ export default function DashboardPage() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Transfer <span className="font-semibold text-slate-900">50 DKK</span> via MobilePay to{' '}
+              Transfer <span className="font-semibold text-slate-900">{minThreshold} DKK</span> via MobilePay to{' '}
               <span className="font-semibold text-slate-900">{fund?.collector_name}</span> at{' '}
               <span className="font-mono font-semibold text-emerald-800">{mobilePayNum}</span>.
             </p>

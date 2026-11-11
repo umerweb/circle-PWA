@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
 
     // Calculate live aggregates
     const contributions = contribRes.rows;
+    const minThreshold = Number(fund.min_contribution || 50.0);
     let totalTarget = 0;
     let totalConfirmed = 0;
     let totalReported = 0;
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
 
     for (const c of contributions) {
       const amt = Number(c.amount);
-      totalTarget += 50.0;
+      totalTarget += amt > 0 ? amt : minThreshold;
       if (c.status === 'confirmed') {
         totalConfirmed += amt;
         paidCount++;
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
 
     // Fallback target for empty real state
     if (!isDemoViewer && totalTarget === 0) {
-      totalTarget = 50.0;
+      totalTarget = minThreshold;
     }
 
     return NextResponse.json({
@@ -261,10 +262,27 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Threshold amount must be a positive number' }, { status: 400 });
         }
 
+        // Update pending contributions to the new threshold
+        await client.query(
+          `
+          UPDATE public.contributions
+          SET amount = $1,
+              updated_at = now()
+          WHERE fund_id = $2 AND status = 'pending';
+        `,
+          [minAmt, fundId]
+        );
+
+        // Recalculate target_amount on monthly_funds
         const updateFundRes = await client.query(
           `
           UPDATE public.monthly_funds
           SET min_contribution = $1,
+              target_amount = (
+                SELECT COALESCE(SUM(amount), 0)
+                FROM public.contributions
+                WHERE fund_id = $2
+              ),
               updated_at = now()
           WHERE id = $2
           RETURNING *;
