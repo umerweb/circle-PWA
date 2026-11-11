@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const { email, demoMode } = await req.json();
 
-    if (!email) {
+    let cleanEmail = demoMode ? 'umer.web2@gmail.com' : (email ? String(email).trim().toLowerCase() : '');
+
+    if (!cleanEmail) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
-
-    const cleanEmail = String(email).trim().toLowerCase();
 
     // Verify user exists in circle members
     const res = await query(
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     if (res.rows.length === 0) {
       return NextResponse.json(
-        { error: 'No community membership found with this email. Circle Fund is invitation-only.' },
+        { error: 'No community membership found with this email. Please sign up or request an OTP.' },
         { status: 403 }
       );
     }
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
       status: row.status,
       phone: row.phone,
       mobilepayNumber: row.mobilepay_number,
-      isDemo: row.is_demo,
+      isDemo: Boolean(row.is_demo || row.email === 'umer.web2@gmail.com'),
       preferredLanguage: row.preferred_language,
     };
 
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
       entityId: user.id,
       actorId: user.id,
       actorEmail: user.email,
-      details: { role: user.role, loginMethod: 'email_session' },
+      details: { role: user.role, loginMethod: demoMode ? 'demo_instant' : 'email_session' },
     });
 
     const response = NextResponse.json({ success: true, user });

@@ -122,6 +122,38 @@ export async function POST(req: NextRequest) {
 
       if (action === 'report_payment') {
         // Member marks payment as sent
+        let targetId = contributionId;
+
+        // If contributionId wasn't passed directly, find or insert one for this member & fund
+        if (!targetId && fundId) {
+          const findRes = await client.query(
+            `SELECT id FROM public.contributions WHERE fund_id = $1 AND member_id = $2 LIMIT 1`,
+            [fundId, actor.id]
+          );
+          if (findRes.rows.length > 0) {
+            targetId = findRes.rows[0].id;
+          } else {
+            const insertRes = await client.query(
+              `INSERT INTO public.contributions (
+                fund_id, member_id, amount, status, is_collector_contribution, payment_reference, member_note, reported_at
+              ) VALUES (
+                $1, $2, COALESCE($3, 50.00), 'reported', false, $4, $5, now()
+              ) RETURNING *;`,
+              [fundId, actor.id, amount ? Number(amount) : 50.00, paymentReference || null, memberNote || null]
+            );
+            await client.query('COMMIT');
+            await logAuditEvent({
+              action: 'PAYMENT_REPORTED',
+              entityType: 'CONTRIBUTION',
+              entityId: insertRes.rows[0].id,
+              actorId: actor.id,
+              actorEmail: actor.email,
+              details: { amount: insertRes.rows[0].amount, paymentReference, memberNote },
+            });
+            return NextResponse.json({ success: true, contribution: insertRes.rows[0] });
+          }
+        }
+
         const res = await client.query(
           `
           UPDATE public.contributions
@@ -134,7 +166,7 @@ export async function POST(req: NextRequest) {
           WHERE id = $4
           RETURNING *;
         `,
-          [amount ? Number(amount) : null, paymentReference || null, memberNote || null, contributionId]
+          [amount ? Number(amount) : null, paymentReference || null, memberNote || null, targetId]
         );
 
         if (res.rows.length === 0) {
@@ -146,7 +178,7 @@ export async function POST(req: NextRequest) {
         await logAuditEvent({
           action: 'PAYMENT_REPORTED',
           entityType: 'CONTRIBUTION',
-          entityId: contributionId,
+          entityId: targetId,
           actorId: actor.id,
           actorEmail: actor.email,
           details: { amount, paymentReference, memberNote },

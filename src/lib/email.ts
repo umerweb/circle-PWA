@@ -167,39 +167,168 @@ export const EmailTemplates = {
       `,
       text: `Circle Fund: Økonomisk rapport for ${period} er offentliggjort.\nSamlet indsamlet: ${totalCollected} DKK\nSamlet uddelt: ${totalDistributed} DKK\nSe alle detaljer i portalen.`
     })
+  },
+
+  otp: {
+    en: (code: string, purpose: 'login' | 'signup', name?: string) => ({
+      subject: `Circle Fund: ${code} is your verification code`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; background-color: #15803d; color: #ffffff; width: 44px; height: 44px; line-height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px;">CF</div>
+            <h1 style="color: #0f172a; font-size: 22px; font-weight: 700; margin: 12px 0 4px 0;">Circle Fund</h1>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">Transparent Community Mutual Aid · Denmark</p>
+          </div>
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <p style="color: #334155; font-size: 14px; margin: 0 0 16px 0;">
+              ${name ? `Hello <strong>${name}</strong>,<br/>` : ''}
+              ${purpose === 'signup' ? 'Use this verification code to activate your new Circle Fund membership:' : 'Use this verification code to sign in to your Circle Fund account:'}
+            </p>
+            <div style="letter-spacing: 10px; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 34px; font-weight: 800; color: #15803d; padding: 14px 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: inline-block;">
+              ${code}
+            </div>
+            <p style="color: #64748b; font-size: 12px; margin: 18px 0 0 0;">
+              ⏱ Valid for <strong>10 minutes</strong>. Do not share this code with anyone.
+            </p>
+          </div>
+          <p style="color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5; margin: 0;">
+            If you did not request this verification code, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+      text: `Your Circle Fund verification code is: ${code}\nValid for 10 minutes.\nDo not share this code with anyone.\nIf you did not request this code, please ignore this email.`
+    }),
+    da: (code: string, purpose: 'login' | 'signup', name?: string) => ({
+      subject: `Circle Fund: ${code} er din bekræftelseskode`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="display: inline-block; background-color: #15803d; color: #ffffff; width: 44px; height: 44px; line-height: 44px; border-radius: 12px; font-weight: bold; font-size: 20px;">CF</div>
+            <h1 style="color: #0f172a; font-size: 22px; font-weight: 700; margin: 12px 0 4px 0;">Circle Fund</h1>
+            <p style="color: #64748b; font-size: 13px; margin: 0;">Gennemskuelig fællesskabspulje · Danmark</p>
+          </div>
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <p style="color: #334155; font-size: 14px; margin: 0 0 16px 0;">
+              ${name ? `Hej <strong>${name}</strong>,<br/>` : ''}
+              ${purpose === 'signup' ? 'Brug denne bekræftelseskode til at aktivere dit nye Circle Fund medlemskab:' : 'Brug denne bekræftelseskode til at logge ind på din Circle Fund konto:'}
+            </p>
+            <div style="letter-spacing: 10px; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 34px; font-weight: 800; color: #15803d; padding: 14px 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: inline-block;">
+              ${code}
+            </div>
+            <p style="color: #64748b; font-size: 12px; margin: 18px 0 0 0;">
+              ⏱ Gyldig i <strong>10 minutter</strong>. Del aldrig denne kode med andre.
+            </p>
+          </div>
+          <p style="color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5; margin: 0;">
+            Hvis du ikke har anmodet om denne bekræftelseskode, kan du se bort fra denne e-mail.
+          </p>
+        </div>
+      `,
+      text: `Din Circle Fund bekræftelseskode er: ${code}\nGyldig i 10 minutter.\nDel aldrig denne kode med andre.\nHvis du ikke har anmodet om koden, kan du ignorere denne e-mail.`
+    })
   }
 };
 
-// 2. Email Sender with Disabled by Default Guard
-export async function sendNotificationEmail(payload: EmailPayload): Promise<EmailDeliveryResult> {
+// 2. Direct Resend Dispatcher
+export async function sendEmailDirect({
+  to,
+  subject,
+  html,
+  text
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<EmailDeliveryResult> {
   const isEnabled = process.env.EMAIL_ENABLED === 'true';
+  const apiKey = process.env.RESEND_API_KEY;
 
-  if (!isEnabled) {
-    console.log(
-      `[EMAIL SERVICE: DISABLED] Email to ${payload.to.email} (${payload.subject}) safely skipped. Reason: EMAIL_ENABLED=false.`
-    );
+  if (!isEnabled || !apiKey) {
+    console.log(`[EMAIL SERVICE: SIMULATED] To: ${to} | Subject: ${subject}`);
     return {
       success: true,
       skipped: true,
-      reason: 'EMAIL_ENABLED is set to false. Operation completed safely without sending real email.',
+      reason: 'Email sending is simulated (EMAIL_ENABLED=false or missing RESEND_API_KEY).',
     };
   }
 
-  // Future provider integration (e.g. Resend, SMTP, SendGrid)
   try {
-    console.log(`[EMAIL SERVICE] Sending email to ${payload.to.email}...`);
-    // Placeholder for provider execution once API credentials are provided by user
+    const fromAddress = process.env.EMAIL_FROM || 'Circle Fund <auth@service.nordpak.org>';
+    console.log(`[EMAIL SERVICE] Sending email to ${to} via Resend...`);
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to,
+        subject,
+        html,
+        text,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error('[EMAIL SERVICE] Resend API error response:', res.status, data);
+      return {
+        success: false,
+        skipped: false,
+        reason: data.message || 'Resend API rejected email dispatch',
+      };
+    }
+
+    console.log(`[EMAIL SERVICE] Email sent successfully. Message ID: ${data.id}`);
     return {
       success: true,
       skipped: false,
-      messageId: `mock-msg-${Date.now()}`,
+      messageId: data.id,
     };
   } catch (error: any) {
-    console.error('[EMAIL SERVICE] Failed to send email:', error);
+    console.error('[EMAIL SERVICE] Network error dispatching email:', error);
     return {
       success: false,
       skipped: false,
-      reason: error.message || 'Unknown email delivery error',
+      reason: error.message || 'Network dispatch failure',
     };
   }
+}
+
+// 3. High-level Notification Email Sender
+export async function sendNotificationEmail(payload: EmailPayload): Promise<EmailDeliveryResult> {
+  return sendEmailDirect({
+    to: payload.to.email,
+    subject: payload.subject,
+    html: payload.html,
+    text: payload.text,
+  });
+}
+
+// 4. Dedicated OTP Email Sender
+export async function sendOtpEmail({
+  to,
+  name,
+  code,
+  purpose,
+  language = 'en',
+}: {
+  to: string;
+  name?: string;
+  code: string;
+  purpose: 'login' | 'signup';
+  language?: 'en' | 'da';
+}): Promise<EmailDeliveryResult> {
+  const templateBuilder = EmailTemplates.otp[language] || EmailTemplates.otp.en;
+  const { subject, html, text } = templateBuilder(code, purpose, name);
+
+  return sendEmailDirect({
+    to,
+    subject,
+    html,
+    text,
+  });
 }

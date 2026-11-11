@@ -204,6 +204,23 @@ CREATE TABLE IF NOT EXISTS public.member_invitations (
 CREATE INDEX IF NOT EXISTS idx_invitations_token ON public.member_invitations(token);
 CREATE INDEX IF NOT EXISTS idx_invitations_email ON public.member_invitations(email);
 
+-- 11. Authentication OTPs (One-Time Passwords for Email Verification)
+CREATE TABLE IF NOT EXISTS public.auth_otps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    otp_code TEXT NOT NULL,
+    purpose TEXT NOT NULL CHECK (purpose IN ('login', 'signup')),
+    metadata JSONB DEFAULT '{}'::jsonb,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 5,
+    expires_at TIMESTAMPTZ NOT NULL,
+    verified_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_otps_email ON public.auth_otps(email);
+CREATE INDEX IF NOT EXISTS idx_auth_otps_created_at ON public.auth_otps(created_at DESC);
+
 -- Enable Row Level Security (RLS) on all tables in public schema
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.monthly_funds ENABLE ROW LEVEL SECURITY;
