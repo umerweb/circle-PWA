@@ -148,6 +148,35 @@ export default function MembersPage() {
     }
   };
 
+  const handleDeleteMember = async (memberId: string, memberName: string) => {
+    if (!confirm(`Are you sure you want to permanently delete member "${memberName}"? This will delete all their records.`)) {
+      return;
+    }
+    setFormLoading(true);
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_member',
+          memberId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotificationMsg(`Member "${memberName}" deleted successfully.`);
+        if (editModal?.id === memberId) setEditModal(null);
+        fetchMembers();
+      } else {
+        alert(data.error || 'Failed to delete member');
+      }
+    } catch (e: any) {
+      alert(e.message || 'Network error');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -318,19 +347,30 @@ export default function MembersPage() {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <span className="text-[11px] text-slate-500">
                   Paid: <strong className="font-mono text-slate-800">{m.confirmed_payments_count || 0} mo</strong>
                 </span>
 
                 {isAdmin && (
-                  <button
-                    onClick={() => setEditModal(m)}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100"
-                    title="Edit member"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setEditModal(m)}
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                      title="Edit member"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    {m.id !== user?.id && (
+                      <button
+                        onClick={() => handleDeleteMember(m.id, m.full_name)}
+                        className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                        title="Delete member"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -398,13 +438,24 @@ export default function MembersPage() {
                   </td>
                   {isAdmin && (
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => setEditModal(m)}
-                        className="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100"
-                        title="Edit member"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => setEditModal(m)}
+                          className="p-1 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-100"
+                          title="Edit member"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        {m.id !== user?.id && (
+                          <button
+                            onClick={() => handleDeleteMember(m.id, m.full_name)}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                            title="Delete member"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -540,21 +591,34 @@ export default function MembersPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditModal(null)}
-                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
-                >
-                  {t.common.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="w-1/2 sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50"
-                >
-                  {formLoading ? t.common.loading : t.common.save}
-                </button>
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+                {editModal.id !== user?.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMember(editModal.id, editModal.full_name)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Member</span>
+                  </button>
+                ) : <div />}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditModal(null)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs"
+                  >
+                    {t.common.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50 text-xs"
+                  >
+                    {formLoading ? t.common.loading : t.common.save}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

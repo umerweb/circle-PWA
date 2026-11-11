@@ -30,7 +30,31 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, fullName, phone, mobilepayNumber } = await req.json();
+    const { email, password, fullName, phone, mobilepayNumber, setupKey } = await req.json();
+
+    // Check if a real production admin already exists
+    const existingAdminRes = await query(
+      `SELECT id, email FROM public.profiles WHERE role = 'admin' AND is_demo = false LIMIT 1`
+    );
+    const existingAdmin = existingAdminRes.rows[0];
+
+    // If an admin already exists, enforce security check
+    if (existingAdmin) {
+      const emailCookie = req.cookies.get('circle_user_email')?.value || '';
+      const actorRes = await query('SELECT role FROM public.profiles WHERE email = $1 LIMIT 1', [emailCookie]);
+      const isAuthedAdmin = actorRes.rows[0]?.role === 'admin';
+      const bootstrapSecret = process.env.BOOTSTRAP_SECRET;
+      const isValidKey = bootstrapSecret && setupKey === bootstrapSecret;
+
+      if (!isAuthedAdmin && !isValidKey) {
+        return NextResponse.json(
+          {
+            error: 'Security locked: A Super Administrator is already configured. Only an existing admin or valid setupKey can provision additional administrators.',
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const targetEmail = email ? String(email).trim().toLowerCase() : '';
 

@@ -197,6 +197,95 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, contribution: res.rows[0] });
       }
 
+      // Delete payment / contribution (Admin full control)
+      if (action === 'delete_payment') {
+        if (actor.role !== 'admin') {
+          return NextResponse.json({ error: 'Administrator privileges required to delete payments' }, { status: 403 });
+        }
+        if (!contributionId) {
+          return NextResponse.json({ error: 'Contribution ID is required' }, { status: 400 });
+        }
+
+        const contribRes = await client.query(
+          `SELECT * FROM public.contributions WHERE id = $1 FOR UPDATE;`,
+          [contributionId]
+        );
+        if (contribRes.rows.length === 0) {
+          throw new Error('Contribution record not found');
+        }
+        const contrib = contribRes.rows[0];
+
+        await client.query(`DELETE FROM public.contributions WHERE id = $1;`, [contributionId]);
+
+        // Recalculate monthly fund
+        await client.query(
+          `
+          UPDATE public.monthly_funds
+          SET target_amount = (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM public.contributions
+            WHERE fund_id = $1
+          ),
+          collected_amount = (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM public.contributions
+            WHERE fund_id = $1 AND status = 'confirmed'
+          ),
+          updated_at = now()
+          WHERE id = $1;
+        `,
+          [contrib.fund_id]
+        );
+
+        await client.query('COMMIT');
+
+        await logAuditEvent({
+          action: 'PAYMENT_DELETED',
+          entityType: 'CONTRIBUTION',
+          entityId: contributionId,
+          actorId: actor.id,
+          actorEmail: actor.email,
+          details: { memberId: contrib.member_id, amount: contrib.amount },
+        });
+
+        return NextResponse.json({ success: true, message: 'Payment record deleted successfully' });
+      }
+
+      // Set Monthly Threshold (Admin full control)
+      if (action === 'set_monthly_threshold') {
+        if (actor.role !== 'admin') {
+          return NextResponse.json({ error: 'Administrator privileges required to set threshold' }, { status: 403 });
+        }
+        const minAmt = Number(body.minContribution ?? body.threshold ?? 50);
+        if (isNaN(minAmt) || minAmt < 0) {
+          return NextResponse.json({ error: 'Threshold amount must be a positive number' }, { status: 400 });
+        }
+
+        const updateFundRes = await client.query(
+          `
+          UPDATE public.monthly_funds
+          SET min_contribution = $1,
+              updated_at = now()
+          WHERE id = $2
+          RETURNING *;
+        `,
+          [minAmt, fundId]
+        );
+
+        await client.query('COMMIT');
+
+        await logAuditEvent({
+          action: 'MONTHLY_THRESHOLD_UPDATED',
+          entityType: 'FUND',
+          entityId: fundId,
+          actorId: actor.id,
+          actorEmail: actor.email,
+          details: { minContribution: minAmt },
+        });
+
+        return NextResponse.json({ success: true, fund: updateFundRes.rows[0] });
+      }
+
       if (action === 'confirm_payment') {
         // Collector or Admin verifies payment receipt in MobilePay
         const contribRes = await client.query(

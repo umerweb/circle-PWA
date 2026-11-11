@@ -249,6 +249,70 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 4. Delete Member (Admin full control)
+    if (action === 'delete_member') {
+      if (!memberId) {
+        return NextResponse.json({ error: 'Member ID is required' }, { status: 400 });
+      }
+
+      if (memberId === actor.id) {
+        return NextResponse.json({ error: 'You cannot delete your own administrator account' }, { status: 400 });
+      }
+
+      const client = await getClient();
+      try {
+        await client.query('BEGIN');
+
+        // Delete associated contributions
+        await client.query(`DELETE FROM public.contributions WHERE member_id = $1`, [memberId]);
+        // Delete collector volunteers
+        await client.query(`DELETE FROM public.collector_volunteers WHERE member_id = $1`, [memberId]);
+        // Delete notifications
+        await client.query(`DELETE FROM public.notifications WHERE user_id = $1`, [memberId]);
+        // Delete profile
+        const delRes = await client.query(`DELETE FROM public.profiles WHERE id = $1 RETURNING *`, [memberId]);
+
+        if (delRes.rows.length === 0) {
+          throw new Error('Member not found');
+        }
+
+        const deletedMember = delRes.rows[0];
+
+        // Recalculate active monthly fund target and collected amount
+        await client.query(`
+          UPDATE public.monthly_funds f
+          SET target_amount = (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM public.contributions
+            WHERE fund_id = f.id
+          ),
+          collected_amount = (
+            SELECT COALESCE(SUM(amount), 0)
+            FROM public.contributions
+            WHERE fund_id = f.id AND status = 'confirmed'
+          );
+        `);
+
+        await client.query('COMMIT');
+
+        await logAuditEvent({
+          action: 'MEMBER_DELETED',
+          entityType: 'MEMBER',
+          entityId: memberId,
+          actorId: actor.id,
+          actorEmail: actor.email,
+          details: { email: deletedMember.email, fullName: deletedMember.full_name },
+        });
+
+        return NextResponse.json({ success: true, message: 'Member deleted successfully' });
+      } catch (e: any) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error: any) {
     console.error('Error in /api/members POST:', error);

@@ -18,6 +18,9 @@ import {
   UserCheck,
   ChevronRight,
   ShieldAlert,
+  Trash2,
+  SlidersHorizontal,
+  DollarSign,
 } from 'lucide-react';
 
 export default function MonthlyFundPage() {
@@ -37,6 +40,16 @@ export default function MonthlyFundPage() {
   // Exception Modal
   const [exceptionModal, setExceptionModal] = useState<string | null>(null);
   const [exceptionReason, setExceptionReason] = useState('');
+
+  // Threshold Modal State (Admin)
+  const [thresholdModal, setThresholdModal] = useState(false);
+  const [thresholdInput, setThresholdInput] = useState('50');
+
+  // Member Report Modal State (with amount selection in 50 kr multiples)
+  const [reportModal, setReportModal] = useState<any | null>(null);
+  const [chosenAmount, setChosenAmount] = useState<number>(50);
+  const [reportRef, setReportRef] = useState('');
+  const [reportNote, setReportNote] = useState('');
 
   const fetchFundData = async () => {
     try {
@@ -74,22 +87,87 @@ export default function MonthlyFundPage() {
     }
   };
 
-  const handleReportMyPayment = async (contributionId: string) => {
-    setActionLoading(contributionId);
+  const openReportModal = (c: any) => {
+    const minAmt = Number(fund?.min_contribution || 50);
+    setChosenAmount(minAmt);
+    setReportRef(`MP-${Date.now().toString().slice(-6)}`);
+    setReportNote('Overført via MobilePay');
+    setReportModal(c);
+  };
+
+  const handleConfirmReportPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportModal) return;
+    setActionLoading(reportModal.id);
     try {
       const res = await fetch('/api/fund', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'report_payment',
+          contributionId: reportModal.id,
+          amount: Number(chosenAmount),
+          paymentReference: reportRef,
+          memberNote: reportNote,
+        }),
+      });
+      if (res.ok) {
+        setReportModal(null);
+        fetchFundData();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to submit payment report');
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeletePayment = async (contributionId: string) => {
+    if (!confirm('Are you sure you want to delete this payment record? This will adjust fund totals.')) {
+      return;
+    }
+    setActionLoading(contributionId);
+    try {
+      const res = await fetch('/api/fund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_payment',
           contributionId,
-          amount: 50.0,
-          paymentReference: `MP-${Date.now().toString().slice(-6)}`,
-          memberNote: 'Overført via MobilePay',
         }),
       });
       if (res.ok) {
         fetchFundData();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to delete payment');
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSetThreshold = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fund?.id) return;
+    setActionLoading('set_threshold');
+    try {
+      const res = await fetch('/api/fund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set_monthly_threshold',
+          fundId: fund.id,
+          minContribution: Number(thresholdInput),
+        }),
+      });
+      if (res.ok) {
+        setThresholdModal(false);
+        fetchFundData();
+      } else {
+        const d = await res.json();
+        alert(d.error || 'Failed to update threshold');
       }
     } finally {
       setActionLoading(null);
@@ -193,13 +271,27 @@ export default function MonthlyFundPage() {
             amount={50}
           />
           {user?.role === 'admin' && (
-            <button
-              onClick={() => setNewFundModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Open Next Month</span>
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setThresholdInput(String(fund?.min_contribution || 50));
+                  setThresholdModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-xs active:scale-95"
+                title="Configure monthly minimum threshold"
+              >
+                <SlidersHorizontal className="w-4 h-4 text-emerald-700" />
+                <span>Threshold: {fund?.min_contribution || 50} kr</span>
+              </button>
+
+              <button
+                onClick={() => setNewFundModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Open Next Month</span>
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -371,9 +463,9 @@ export default function MonthlyFundPage() {
                 <div className="flex items-center gap-1.5">
                   {isMine && c.status === 'pending' && (
                     <button
-                      onClick={() => handleReportMyPayment(c.id)}
+                      onClick={() => openReportModal(c)}
                       disabled={actionLoading === c.id}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-700 text-white font-semibold text-xs active:scale-95"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-700 text-white font-semibold text-xs active:scale-95 shadow-xs"
                     >
                       <Send className="w-3 h-3" />
                       <span>Mark Paid</span>
@@ -397,6 +489,17 @@ export default function MonthlyFundPage() {
                       className="px-2 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs hover:bg-slate-50"
                     >
                       Exempt
+                    </button>
+                  )}
+
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => handleDeletePayment(c.id)}
+                      disabled={actionLoading === c.id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      title="Delete payment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
@@ -468,9 +571,9 @@ export default function MonthlyFundPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         {isMine && c.status === 'pending' && (
                           <button
-                            onClick={() => handleReportMyPayment(c.id)}
+                            onClick={() => openReportModal(c)}
                             disabled={actionLoading === c.id}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded bg-sky-700 text-white font-medium hover:bg-sky-800 transition-colors"
+                            className="flex items-center gap-1 px-2.5 py-1 rounded bg-sky-700 text-white font-medium hover:bg-sky-800 transition-colors shadow-xs"
                           >
                             <Send className="w-3 h-3" />
                             <span>Mark Paid</span>
@@ -495,6 +598,17 @@ export default function MonthlyFundPage() {
                             className="px-2 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 text-[11px]"
                           >
                             Exempt
+                          </button>
+                        )}
+
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleDeletePayment(c.id)}
+                            disabled={actionLoading === c.id}
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Delete payment"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>
@@ -539,6 +653,177 @@ export default function MonthlyFundPage() {
                   className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800"
                 >
                   Save Exemption
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Set Monthly Threshold (Admin) */}
+      {thresholdModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4 pb-safe">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                <SlidersHorizontal className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Set Monthly Threshold</h3>
+                <p className="text-[11px] text-slate-500">Configure minimum contribution per member</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSetThreshold} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1.5">
+                  Minimum Amount (DKK)
+                </label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {['50', '75', '100', '150'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setThresholdInput(preset)}
+                      className={`py-2 rounded-xl font-bold border text-xs transition-colors ${
+                        thresholdInput === preset
+                          ? 'bg-emerald-700 text-white border-emerald-700'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {preset} kr
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  required
+                  value={thresholdInput}
+                  onChange={(e) => setThresholdInput(e.target.value)}
+                  className="w-full text-base sm:text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 font-mono font-bold"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setThresholdModal(false)}
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
+                >
+                  {t.common.cancel}
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading === 'set_threshold'}
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800"
+                >
+                  {actionLoading === 'set_threshold' ? t.common.loading : 'Save Threshold'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Member Report Payment (Choose Amount in 50 kr multiples) */}
+      {reportModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-5 space-y-4 pb-safe">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-800 flex items-center justify-center font-bold">
+                <Send className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Report Payment</h3>
+                <p className="text-[11px] text-slate-500">Choose your contribution amount in 50 kr</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmReportPayment} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1.5">
+                  Select Amount (DKK)
+                </label>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  {[50, 100, 150, 200, 250, 300].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setChosenAmount(amt)}
+                      className={`py-2 px-1 rounded-xl font-bold border text-xs transition-colors ${
+                        chosenAmount === amt
+                          ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {amt} kr
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2">
+                  <label className="block text-[11px] text-slate-500 mb-1">
+                    Custom Amount (in multiples of 50 kr)
+                  </label>
+                  <input
+                    type="number"
+                    min={fund?.min_contribution || 50}
+                    step="50"
+                    required
+                    value={chosenAmount}
+                    onChange={(e) => setChosenAmount(Number(e.target.value))}
+                    className="w-full text-base sm:text-xs px-3.5 py-2 rounded-xl border border-slate-300 font-mono font-bold text-slate-900 focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  MobilePay Reference
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. MP-123456"
+                  value={reportRef}
+                  onChange={(e) => setReportRef(e.target.value)}
+                  className="w-full text-base sm:text-xs px-3.5 py-2 rounded-xl border border-slate-300 font-mono focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Note (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Overført via MobilePay"
+                  value={reportNote}
+                  onChange={(e) => setReportNote(e.target.value)}
+                  className="w-full text-base sm:text-xs px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-800 text-[11px] flex items-center justify-between font-medium">
+                <span>Total Contribution:</span>
+                <span className="font-mono font-extrabold text-xs">{formatCurrency(chosenAmount)}</span>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setReportModal(null)}
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100"
+                >
+                  {t.common.cancel}
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading === reportModal.id}
+                  className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 active:scale-95 shadow-xs"
+                >
+                  {actionLoading === reportModal.id ? t.common.loading : 'Confirm & Report'}
                 </button>
               </div>
             </form>
