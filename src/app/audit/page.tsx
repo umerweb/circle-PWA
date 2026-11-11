@@ -30,11 +30,11 @@ export default function AuditPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="pb-2 border-b border-slate-200">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+      <div className="pb-3 border-b border-slate-200/80">
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
           {t.audit.title}
         </h1>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="font-sans text-xs text-slate-500 mt-1">
           {t.audit.subtitle}
         </p>
       </div>

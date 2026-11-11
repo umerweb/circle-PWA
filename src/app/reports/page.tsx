@@ -149,12 +149,12 @@ export default function ReportsPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             {t.reports.title}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="font-sans text-xs text-slate-500 mt-1">
             {t.reports.subtitle}
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function ReportsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <a
             href="/api/reports?format=csv"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors shadow-xs active:scale-95 font-sans"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{t.reports.exportCsv}</span>
@@ -171,7 +171,7 @@ export default function ReportsPage() {
           {isAdmin && (
             <button
               onClick={() => setGenerateModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95 font-sans"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Generate Statement</span>
@@ -196,8 +196,8 @@ export default function ReportsPage() {
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-sm sm:text-base font-bold text-slate-900">{r.period_label}</h2>
-                    <span className="text-[11px] text-slate-500">
+                    <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900">{r.period_label}</h2>
+                    <span className="font-sans text-[11px] text-slate-500">
                       Statement created {formatDate(r.created_at)}
                     </span>
                   </div>

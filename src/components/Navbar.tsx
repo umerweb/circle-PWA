@@ -106,10 +106,10 @@ export function Navbar() {
                 <CircleDot className="w-5 h-5 text-emerald-100" />
               </div>
               <div>
-                <span className="text-base font-bold tracking-tight text-slate-900 group-hover:text-emerald-800 transition-colors">
+                <span className="font-serif text-lg font-bold tracking-tight text-slate-900 group-hover:text-emerald-800 transition-colors">
                   Circle Fund
                 </span>
-                <span className="hidden md:block text-[10px] text-slate-500 font-medium tracking-wide uppercase">
+                <span className="hidden md:block font-sans text-[10px] text-slate-500 font-medium tracking-wide uppercase">
                   Danmark · 50 DKK
                 </span>
               </div>
@@ -226,19 +226,14 @@ export function Navbar() {
                       <p className="text-xs font-bold text-slate-900 truncate">{user.fullName}</p>
                       <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
                       <div className="mt-1.5 flex items-center gap-1.5">
-                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider">
+                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider font-sans">
                           {user.role}
                         </span>
-                        {user.isDemo && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-500">
-                            demo
-                          </span>
-                        )}
                       </div>
                     </div>
 
-                    {/* Role Demonstration Switcher (only for demo admin / demo accounts) */}
-                    {(user.isDemo || user.email === 'umer.web2@gmail.com') && (
+                    {/* Role Demonstration Switcher (strictly for initial designated admin) */}
+                    {user.email === 'umer.web2@gmail.com' && (
                       <div className="px-3 py-2 border-b border-slate-100">
                         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 px-1">
                           Switch Test Persona
@@ -348,8 +343,8 @@ export function Navbar() {
                 </span>
               </div>
 
-              {/* Persona Switcher inside Mobile Drawer (only for demo admin / demo accounts) */}
-              {(user.isDemo || user.email === 'umer.web2@gmail.com') && (
+              {/* Persona Switcher inside Mobile Drawer (strictly for designated admin) */}
+              {user.email === 'umer.web2@gmail.com' && (
                 <div className="pt-2 border-t border-slate-200/60">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
                     Switch Persona (Demo)

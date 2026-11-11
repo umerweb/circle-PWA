@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
 
     const fund = fundRes.rows[0];
 
-    // Get all contributions for this fund
+    const emailCookie = req.cookies.get('circle_user_email')?.value?.trim().toLowerCase();
+    const isDemoViewer = emailCookie === 'umer.web2@gmail.com';
+
+    // Get contributions for this fund (Strict isolation: real users only see real members)
     const contribRes = await query(
       `
       SELECT c.*,
@@ -47,7 +50,7 @@ export async function GET(req: NextRequest) {
       FROM public.contributions c
       JOIN public.profiles p ON c.member_id = p.id
       LEFT JOIN public.profiles v ON c.confirmed_by = v.id
-      WHERE c.fund_id = $1
+      WHERE c.fund_id = $1 ${isDemoViewer ? '' : 'AND p.is_demo = false'}
       ORDER BY 
         c.is_collector_contribution DESC,
         CASE c.status 
@@ -84,10 +87,17 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Fallback target for empty real state
+    if (!isDemoViewer && totalTarget === 0) {
+      totalTarget = 50.0;
+    }
+
     return NextResponse.json({
       fund: {
         ...fund,
-        computedTarget: totalTarget,
+        target_amount: isDemoViewer ? fund.target_amount : totalTarget,
+        collected_amount: isDemoViewer ? fund.collected_amount : totalConfirmed,
+        computedTarget: isDemoViewer ? (fund.computedTarget || totalTarget) : totalTarget,
         computedCollected: totalConfirmed,
         totalReported,
         paidCount,

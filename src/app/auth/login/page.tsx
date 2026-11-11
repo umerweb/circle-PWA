@@ -8,22 +8,20 @@ import {
   CircleDot,
   Mail,
   KeyRound,
-  Shield,
   User,
-  UserCheck,
   AlertCircle,
   CheckCircle2,
   ArrowRight,
   RefreshCw,
-  Sparkles,
   Phone,
   UserPlus,
   LogIn,
+  Lock,
 } from 'lucide-react';
 
 export default function LoginPage() {
   const { t, language } = useI18n();
-  const { requestOtp, verifyOtp, enterDemoMode, switchUserRoleForDemo } = useAuth();
+  const { requestOtp, verifyOtp, signIn } = useAuth();
   const router = useRouter();
 
   // Mode: 'signin' or 'signup'
@@ -34,6 +32,8 @@ export default function LoginPage() {
 
   // Form Fields
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPasswordOption, setShowPasswordOption] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [mobilepayNumber, setMobilepayNumber] = useState('');
@@ -47,13 +47,22 @@ export default function LoginPage() {
   // Cooldown countdown
   const [cooldown, setCooldown] = useState(0);
 
-  // Suggested action for edge cases (e.g., account exists or needs signup)
+  // Suggested action for edge cases
   const [suggestedAction, setSuggestedAction] = useState<{
     text: string;
     action: () => void;
   } | null>(null);
 
   const otpInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if admin email is entered to offer direct password field
+  const isAdminEmail = email.trim().toLowerCase() === 'umer.web2@gmail.com';
+
+  useEffect(() => {
+    if (isAdminEmail) {
+      setShowPasswordOption(true);
+    }
+  }, [isAdminEmail]);
 
   // Timer effect for resend cooldown
   useEffect(() => {
@@ -70,6 +79,26 @@ export default function LoginPage() {
       otpInputRef.current.focus();
     }
   }, [step]);
+
+  // Handle Sign In with Password (e.g. umer.web2@gmail.com with 12345678)
+  const handlePasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+    setLoading(true);
+
+    const res = await signIn(email.trim().toLowerCase(), password);
+    setLoading(false);
+
+    if (res.success) {
+      setSuccessMessage(language === 'da' ? 'Logget ind! Omdirigerer...' : 'Signed in! Redirecting...');
+      setTimeout(() => {
+        router.push('/');
+      }, 500);
+    } else {
+      setError(res.error || 'Authentication failed. Please verify your credentials.');
+    }
+  };
 
   // Handle Requesting OTP
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -169,7 +198,7 @@ export default function LoginPage() {
       );
       setTimeout(() => {
         router.push('/');
-      }, 800);
+      }, 700);
     } else {
       setError(res.error || 'Verification failed');
       if (res.maxAttemptsReached || res.expired) {
@@ -209,40 +238,27 @@ export default function LoginPage() {
     }
   };
 
-  // Instant Demo Mode handler
-  const handleDemoMode = async (role: 'admin' | 'collector' | 'member' = 'admin') => {
-    setLoading(true);
-    setError(null);
-
-    if (role === 'admin') {
-      await enterDemoMode();
-    } else {
-      await switchUserRoleForDemo(role);
-    }
-
-    setLoading(false);
-    router.push('/');
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-[75vh] px-3.5 py-6">
-      <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xl max-w-md w-full p-5 sm:p-8 space-y-6">
-        {/* App Logo & Header */}
-        <div className="text-center space-y-1.5">
-          <div className="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center mx-auto shadow-md">
-            <CircleDot className="w-6 h-6 text-emerald-100" />
+    <div className="flex items-center justify-center min-h-[78vh] px-3.5 py-8">
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-9 space-y-7">
+        {/* Editorial Brand Header */}
+        <div className="text-center space-y-2">
+          <div className="w-11 h-11 rounded-full bg-emerald-700 text-white flex items-center justify-center mx-auto shadow-sm">
+            <CircleDot className="w-5 h-5 text-emerald-100" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            {t.auth.signInTitle}
-          </h1>
-          <p className="text-xs text-slate-500">
-            {step === 1 ? t.auth.signInSubtitle : t.auth.enterOtpSubtitle}
-          </p>
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Circle Fund
+            </h1>
+            <p className="font-sans text-xs text-slate-500 font-medium tracking-wide mt-1">
+              Danmark · 50 DKK Månedlig Fællesskabsopsparing
+            </p>
+          </div>
         </div>
 
-        {/* Tab Switcher: Sign In vs Sign Up (Visible in Step 1) */}
+        {/* Tab Switcher: Sign In vs Create Account */}
         {step === 1 && (
-          <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold">
+          <div className="flex rounded-xl bg-slate-100/90 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => {
@@ -250,9 +266,9 @@ export default function LoginPage() {
                 setError(null);
                 setSuggestedAction(null);
               }}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+              className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 mode === 'signin'
-                  ? 'bg-white text-slate-900 shadow-xs'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900'
               }`}
             >
@@ -266,9 +282,9 @@ export default function LoginPage() {
                 setError(null);
                 setSuggestedAction(null);
               }}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+              className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 mode === 'signup'
-                  ? 'bg-white text-emerald-800 shadow-xs'
+                  ? 'bg-white text-emerald-800 shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900'
               }`}
             >
@@ -278,7 +294,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Alerts / Feedback */}
+        {/* Alerts / Error Feedback */}
         {error && (
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
             <div className="flex items-start gap-2">
@@ -304,12 +320,15 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* STEP 1: Enter Email / Signup Details */}
+        {/* STEP 1: Form */}
         {step === 1 ? (
-          <form onSubmit={handleRequestOtp} className="space-y-4 text-xs">
+          <form
+            onSubmit={showPasswordOption && password ? handlePasswordSignIn : handleRequestOtp}
+            className="space-y-4 text-xs font-sans"
+          >
             {mode === 'signup' && (
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 mb-1.5">
                   {t.auth.fullNameLabel} *
                 </label>
                 <div className="relative">
@@ -327,7 +346,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
+              <label className="block font-semibold text-slate-700 mb-1.5">
                 {t.auth.emailLabel} *
               </label>
               <div className="relative">
@@ -343,6 +362,28 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Administrator Password Option (automatically appears when umer.web2@gmail.com is typed or toggled) */}
+            {mode === 'signin' && (showPasswordOption || isAdminEmail) && (
+              <div className="space-y-1.5 pt-1 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <label className="block font-semibold text-slate-700">
+                    Administrator Password
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-medium">Default: 12345678</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                  />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                </div>
+              </div>
+            )}
+
             {mode === 'signup' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -355,7 +396,7 @@ export default function LoginPage() {
                       placeholder={t.auth.mobilepayPlaceholder}
                       value={mobilepayNumber}
                       onChange={(e) => setMobilepayNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-9"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-9 font-mono"
                     />
                     <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   </div>
@@ -370,14 +411,14 @@ export default function LoginPage() {
                     placeholder={t.auth.phonePlaceholder}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm font-mono"
                   />
                 </div>
               </div>
             )}
 
             {mode === 'signup' && (
-              <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200/60">
+              <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/60">
                 {t.auth.termsNotice}
               </p>
             )}
@@ -385,21 +426,43 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99] mt-2"
             >
-              <KeyRound className="w-4 h-4" />
-              <span>{loading ? t.auth.sendingOtp : t.auth.sendOtp}</span>
+              {password && showPasswordOption ? (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>{loading ? t.common.loading : 'Sign In with Password'}</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>{loading ? t.auth.sendingOtp : t.auth.sendOtp}</span>
+                </>
+              )}
             </button>
+
+            {/* Toggle password option for sign in */}
+            {mode === 'signin' && !isAdminEmail && (
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordOption(!showPasswordOption)}
+                  className="text-[11px] text-slate-400 hover:text-slate-600 underline font-medium"
+                >
+                  {showPasswordOption ? 'Use Email Code (OTP) instead' : 'Administrator password login'}
+                </button>
+              </div>
+            )}
           </form>
         ) : (
           /* STEP 2: Enter 6-Digit Verification Code */
-          <form onSubmit={handleVerifyOtp} className="space-y-5 text-xs">
-            <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
+          <form onSubmit={handleVerifyOtp} className="space-y-5 text-xs font-sans">
+            <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
               <div className="truncate">
                 <span className="text-[11px] text-emerald-800 font-medium block">
                   {t.auth.otpSentTo}:
                 </span>
-                <span className="font-bold text-slate-900 truncate block text-xs">
+                <span className="font-bold text-slate-900 truncate block text-xs font-mono">
                   {email}
                 </span>
               </div>
@@ -443,11 +506,17 @@ export default function LoginPage() {
               disabled={loading || otpCode.length !== 6}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99]"
             >
-              <span>{loading ? t.common.loading : mode === 'signup' ? t.auth.verifyAndSignUp : t.auth.verifyAndContinue}</span>
+              <span>
+                {loading
+                  ? t.common.loading
+                  : mode === 'signup'
+                  ? t.auth.verifyAndSignUp
+                  : t.auth.verifyAndContinue}
+              </span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            {/* Resend Action with live countdown */}
+            {/* Resend Action with countdown */}
             <div className="text-center pt-1">
               {cooldown > 0 ? (
                 <span className="text-xs text-slate-400 font-medium">
@@ -468,65 +537,10 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* DEMO MODE: Reviewer & Evaluation Access */}
-        <div className="pt-4 border-t border-slate-100 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-600" />
-              <span>Demo Mode (Super Admin)</span>
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">
-              umer.web2@gmail.com
-            </span>
-          </div>
-
-          <p className="text-[11px] text-slate-500 leading-normal">
-            {t.auth.demoNoticeDesc}
-          </p>
-
-          <button
-            type="button"
-            onClick={() => handleDemoMode('admin')}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border border-amber-300 bg-amber-50/80 hover:bg-amber-100/90 text-amber-950 font-semibold text-xs transition-colors shadow-xs"
-          >
-            <Shield className="w-4 h-4 text-amber-700" />
-            <span>{t.auth.demoAdminButton}</span>
-          </button>
-
-          {/* Quick Persona Demo Switcher */}
-          <div className="pt-1">
-            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider text-center mb-1.5">
-              {t.auth.switchPersona}
-            </p>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleDemoMode('admin')}
-                className="p-2 rounded-lg border border-purple-200 bg-purple-50 text-purple-800 hover:bg-purple-100 flex flex-col items-center gap-1 font-semibold transition-colors"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoMode('collector')}
-                className="p-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 flex flex-col items-center gap-1 font-semibold transition-colors"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Collector</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoMode('member')}
-                className="p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 flex flex-col items-center gap-1 font-semibold transition-colors"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Member</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Security / Privacy footnote */}
+        <p className="text-[11px] text-center text-slate-400 font-sans">
+          Circle Fund Danmark · Sikkerhed og gennemsigtighed for fællesskabet.
+        </p>
       </div>
     </div>
   );

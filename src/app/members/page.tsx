@@ -153,29 +153,31 @@ export default function MembersPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             {t.members.title}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="font-sans text-xs text-slate-500 mt-1">
             {t.members.subtitle}
           </p>
         </div>
 
         {isAdmin && (
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setPurgeConfirmModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-colors active:scale-95 shadow-xs"
-              title="Remove placeholder demo records before real production use"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>{t.members.removeDemoData}</span>
-            </button>
+            {user?.email === 'umer.web2@gmail.com' && (
+              <button
+                onClick={() => setPurgeConfirmModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold transition-colors active:scale-95 shadow-xs font-sans"
+                title="Remove placeholder demo records before real production use"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{t.members.removeDemoData}</span>
+              </button>
+            )}
             <button
               onClick={() => setAddModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 transition-colors shadow-xs active:scale-95 font-sans"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>{t.members.addMember}</span>
@@ -196,32 +198,34 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* KPI Counters: 3 compact columns */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
-        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
-          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
+      {/* KPI Counters */}
+      <div className={`grid ${user?.email === 'umer.web2@gmail.com' ? 'grid-cols-3' : 'grid-cols-2'} gap-2.5 sm:gap-4`}>
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-5 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
             {t.members.totalMembers}
           </span>
-          <div className="text-lg sm:text-2xl font-bold font-mono text-slate-900 mt-0.5">
+          <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 mt-1">
             {summary?.total_members || members.length}
           </div>
         </div>
-        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
-          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-5 shadow-xs">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
             {t.members.activeCount}
           </span>
-          <div className="text-lg sm:text-2xl font-bold font-mono text-emerald-700 mt-0.5">
+          <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-emerald-800 mt-1">
             {summary?.active_count || members.filter((m) => m.status === 'active').length}
           </div>
         </div>
-        <div className="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-4 shadow-xs">
-          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-400 block truncate">
-            {t.members.demoCount}
-          </span>
-          <div className="text-lg sm:text-2xl font-bold font-mono text-slate-500 mt-0.5">
-            {summary?.demo_count || members.filter((m) => m.is_demo).length}
+        {user?.email === 'umer.web2@gmail.com' && (
+          <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-5 shadow-xs">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
+              {t.members.demoCount}
+            </span>
+            <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-500 mt-1">
+              {summary?.demo_count || members.filter((m) => m.is_demo).length}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

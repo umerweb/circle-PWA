@@ -20,6 +20,9 @@ export async function GET(req: NextRequest) {
       ORDER BY r.year DESC, r.month DESC NULLS LAST, r.created_at DESC;
     `);
 
+    const viewerEmail = req.cookies.get('circle_user_email')?.value?.trim().toLowerCase();
+    const isDemoViewer = viewerEmail === 'umer.web2@gmail.com';
+
     // Live calculation for current fund to compare
     const liveFundsRes = await query(`
       SELECT 
@@ -29,8 +32,8 @@ export async function GET(req: NextRequest) {
         f.title,
         f.target_amount,
         f.collected_amount,
-        (SELECT COUNT(*) FROM public.profiles WHERE status = 'active') as total_members,
-        (SELECT COUNT(*) FROM public.contributions WHERE fund_id = f.id AND status = 'confirmed') as paying_members,
+        (SELECT COUNT(*) FROM public.profiles WHERE status = 'active' ${isDemoViewer ? '' : 'AND is_demo = false'}) as total_members,
+        (SELECT COUNT(*) FROM public.contributions c JOIN public.profiles p ON c.member_id = p.id WHERE c.fund_id = f.id AND c.status = 'confirmed' ${isDemoViewer ? '' : 'AND p.is_demo = false'}) as paying_members,
         (SELECT COALESCE(SUM(amount), 0) FROM public.distributions WHERE fund_id = f.id) as distributed_amount
       FROM public.monthly_funds f
       ORDER BY f.year DESC, f.month DESC;

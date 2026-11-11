@@ -6,12 +6,29 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, demoMode } = await req.json();
+    const { email, password, demoMode } = await req.json();
 
     let cleanEmail = demoMode ? 'umer.web2@gmail.com' : (email ? String(email).trim().toLowerCase() : '');
 
     if (!cleanEmail) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    const adminEmail = (process.env.ADMIN_EMAIL || 'umer.web2@gmail.com').trim().toLowerCase();
+
+    // Special handler for administrator password login
+    if (cleanEmail === adminEmail) {
+      if (password && password !== '12345678') {
+        return NextResponse.json({ error: 'Incorrect administrator password. Please try again.' }, { status: 401 });
+      }
+    } else {
+      // For all standard members, enforce OTP authentication
+      if (password) {
+        return NextResponse.json(
+          { error: 'Please sign in securely with your email verification code (OTP).', useOtp: true },
+          { status: 400 }
+        );
+      }
     }
 
     // Verify user exists in circle members
@@ -27,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     if (res.rows.length === 0) {
       return NextResponse.json(
-        { error: 'No community membership found with this email. Please sign up or request an OTP.' },
+        { error: 'No account found with this email. Please create an account with OTP.', notRegistered: true },
         { status: 403 }
       );
     }
@@ -41,6 +58,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const isSuperAdminDemo = cleanEmail === adminEmail;
+
     const user = {
       id: row.id,
       email: row.email,
@@ -49,7 +68,7 @@ export async function POST(req: NextRequest) {
       status: row.status,
       phone: row.phone,
       mobilepayNumber: row.mobilepay_number,
-      isDemo: Boolean(row.is_demo || row.email === 'umer.web2@gmail.com'),
+      isDemo: Boolean(isSuperAdminDemo || row.is_demo),
       preferredLanguage: row.preferred_language,
     };
 
@@ -59,7 +78,7 @@ export async function POST(req: NextRequest) {
       entityId: user.id,
       actorId: user.id,
       actorEmail: user.email,
-      details: { role: user.role, loginMethod: demoMode ? 'demo_instant' : 'email_session' },
+      details: { role: user.role, loginMethod: password ? 'admin_password' : (demoMode ? 'demo_instant' : 'email_session') },
     });
 
     const response = NextResponse.json({ success: true, user });

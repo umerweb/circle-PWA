@@ -13,17 +13,17 @@ export function StatCard({ title, value, subtitle, icon, trend, trendType = 'neu
   return (
     <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
       <div>
-        <div className="flex items-center justify-between text-slate-500 mb-1.5 gap-1">
-          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 truncate">
+        <div className="flex items-center justify-between text-slate-500 mb-2 gap-1">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 truncate font-sans">
             {title}
           </span>
           {icon && (
-            <div className="text-emerald-700 bg-emerald-50 p-1.5 sm:p-2 rounded-lg shrink-0">
+            <div className="text-emerald-700 bg-emerald-50/80 p-1.5 sm:p-2 rounded-lg shrink-0">
               {icon}
             </div>
           )}
         </div>
-        <div className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 font-mono break-all sm:break-normal">
+        <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 break-all sm:break-normal">
           {value}
         </div>
       </div>

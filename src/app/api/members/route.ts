@@ -11,6 +11,9 @@ export async function GET(req: NextRequest) {
     const role = url.searchParams.get('role');
     const status = url.searchParams.get('status');
 
+    const viewerEmail = req.cookies.get('circle_user_email')?.value?.trim().toLowerCase();
+    const isDemoViewer = viewerEmail === 'umer.web2@gmail.com';
+
     let sql = `
       SELECT id, email, full_name, phone, mobilepay_number, role, status, is_demo, preferred_language, created_at,
              (SELECT COUNT(*) FROM public.contributions WHERE member_id = p.id AND status = 'confirmed') as confirmed_payments_count
@@ -18,6 +21,11 @@ export async function GET(req: NextRequest) {
       WHERE 1=1
     `;
     const params: any[] = [];
+
+    // Real members NEVER see demo placeholder members
+    if (!isDemoViewer) {
+      sql += ` AND p.is_demo = false`;
+    }
 
     if (search) {
       params.push(`%${search}%`);
@@ -38,14 +46,21 @@ export async function GET(req: NextRequest) {
 
     const res = await query(sql, params);
 
-    // Summary counts
-    const countsRes = await query(`
-      SELECT 
-        COUNT(*) as total_members,
-        COUNT(*) FILTER (WHERE status = 'active') as active_count,
-        COUNT(*) FILTER (WHERE is_demo = true) as demo_count
-      FROM public.profiles;
-    `);
+    // Summary counts (Isolated: only demo viewer sees dummy counters)
+    const countsRes = await query(
+      isDemoViewer
+        ? `SELECT 
+            COUNT(*) as total_members,
+            COUNT(*) FILTER (WHERE status = 'active') as active_count,
+            COUNT(*) FILTER (WHERE is_demo = true) as demo_count
+           FROM public.profiles;`
+        : `SELECT 
+            COUNT(*) as total_members,
+            COUNT(*) FILTER (WHERE status = 'active') as active_count,
+            0 as demo_count
+           FROM public.profiles
+           WHERE is_demo = false;`
+    );
 
     return NextResponse.json({
       members: res.rows,

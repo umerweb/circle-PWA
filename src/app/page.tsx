@@ -122,17 +122,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Top Greeting & Community Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               {t.dashboard.title}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 font-sans">
               {fund?.title || 'November 2026'}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="font-sans text-xs sm:text-sm text-slate-500 mt-1">
             {user ? `${t.dashboard.welcomeBack}, ${user.fullName}` : t.brand.tagline}
           </p>
         </div>
@@ -150,55 +150,29 @@ export default function DashboardPage() {
 
       {/* Unauthenticated Visitor Welcome Banner */}
       {!user && (
-        <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-teal-50 to-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-          <div className="space-y-1">
+        <div className="rounded-2xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white uppercase tracking-wider font-sans">
                 Circle Fund Danmark
               </span>
-              <span className="text-xs text-emerald-800 font-semibold">
+              <span className="font-serif text-sm text-emerald-900 font-semibold">
                 Transparent 50 DKK Community Mutual Aid
               </span>
             </div>
-            <p className="text-xs text-slate-600 max-w-xl">
+            <p className="font-sans text-xs text-slate-600 max-w-xl leading-relaxed">
               Sign in with secure email OTP to record your monthly MobilePay contributions, volunteer as a collector, and review transparent financial audits.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
               href="/auth/login"
-              className="px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 shadow-sm transition-colors flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 shadow-sm transition-colors flex items-center gap-1.5 font-sans"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>{t.auth.signInTab} / {t.auth.signUpTab}</span>
             </Link>
-            <button
-              type="button"
-              onClick={() => enterDemoMode()}
-              className="px-3.5 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-950 font-semibold text-xs transition-colors flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Demo Mode</span>
-            </button>
           </div>
-        </div>
-      )}
-
-      {/* Demo Mode Notice for Admin Evaluation */}
-      {user && user.isDemo && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-amber-900">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>
-              <strong>Demo Mode Active:</strong> Signed in as super admin (<span className="font-mono">{user.email}</span>) with 40 demo members. You can switch personas in the menu or purge dummy data.
-            </span>
-          </div>
-          <Link
-            href="/members"
-            className="self-start sm:self-auto text-[11px] font-bold text-amber-950 underline hover:text-amber-800 shrink-0"
-          >
-            Manage Dummy Data &rarr;
-          </Link>
         </div>
       )}
 

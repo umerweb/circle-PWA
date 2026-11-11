@@ -170,17 +170,17 @@ export default function MonthlyFundPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
               {t.fund.title}: {fund?.title}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 font-sans">
               {fund?.status?.toUpperCase()}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="font-sans text-xs text-slate-500 mt-1">
             50 DKK per member · Collector: <span className="font-semibold text-slate-800">{fund?.collector_name}</span> ({fund?.mobilepay_number})
           </p>
         </div>

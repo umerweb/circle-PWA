@@ -133,12 +133,12 @@ export default function BeneficiariesPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
             {t.beneficiaries.title}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="font-sans text-xs text-slate-500 mt-1">
             {t.beneficiaries.subtitle}
           </p>
         </div>
