@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { verifyPassword } from '@/lib/password';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,26 +16,12 @@ export async function POST(req: NextRequest) {
     }
 
     const adminEmail = (process.env.ADMIN_EMAIL || 'umer.web2@gmail.com').trim().toLowerCase();
-
-    // Special handler for administrator password login
-    if (cleanEmail === adminEmail) {
-      if (password && password !== '12345678') {
-        return NextResponse.json({ error: 'Incorrect administrator password. Please try again.' }, { status: 401 });
-      }
-    } else {
-      // For all standard members, enforce OTP authentication
-      if (password) {
-        return NextResponse.json(
-          { error: 'Please sign in securely with your email verification code (OTP).', useOtp: true },
-          { status: 400 }
-        );
-      }
-    }
+    const isAdminEmail = cleanEmail === adminEmail;
 
     // Verify user exists in circle members
     const res = await query(
       `
-      SELECT id, email, full_name, role, status, phone, mobilepay_number, is_demo, preferred_language
+      SELECT id, email, full_name, role, status, phone, mobilepay_number, is_demo, preferred_language, password_hash
       FROM public.profiles
       WHERE LOWER(email) = $1
       LIMIT 1;
@@ -44,8 +31,8 @@ export async function POST(req: NextRequest) {
 
     if (res.rows.length === 0) {
       return NextResponse.json(
-        { error: 'No account found with this email. Please create an account with OTP.', notRegistered: true },
-        { status: 403 }
+        { error: 'No account found with this email. Please register to create an account.', notRegistered: true },
+        { status: 404 }
       );
     }
 
@@ -58,7 +45,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isSuperAdminDemo = cleanEmail === adminEmail;
+    // Verify Password
+    if (isAdminEmail) {
+      // Admin demo fallback (12345678 or hashed password)
+      const isDirectAdminPass = password === '12345678' || demoMode;
+      const isHashedAdminPass = password && verifyPassword(password, row.password_hash);
+      if (!isDirectAdminPass && !isHashedAdminPass) {
+        return NextResponse.json(
+          { error: 'Incorrect administrator password. (Default demo pass: 12345678)' },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Standard member email + password check
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Please enter your password to sign in.' },
+          { status: 400 }
+        );
+      }
+
+      const isValidPassword = verifyPassword(password, row.password_hash);
+      if (!isValidPassword) {
+        return NextResponse.json(
+          { error: 'Incorrect email or password. Please try again.' },
+          { status: 401 }
+        );
+      }
+    }
 
     const user = {
       id: row.id,
@@ -68,7 +82,7 @@ export async function POST(req: NextRequest) {
       status: row.status,
       phone: row.phone,
       mobilepayNumber: row.mobilepay_number,
-      isDemo: Boolean(isSuperAdminDemo || row.is_demo),
+      isDemo: Boolean(isAdminEmail || row.is_demo),
       preferredLanguage: row.preferred_language,
     };
 
@@ -78,7 +92,7 @@ export async function POST(req: NextRequest) {
       entityId: user.id,
       actorId: user.id,
       actorEmail: user.email,
-      details: { role: user.role, loginMethod: password ? 'admin_password' : (demoMode ? 'demo_instant' : 'email_session') },
+      details: { role: user.role, loginMethod: 'email_password' },
     });
 
     const response = NextResponse.json({ success: true, user });

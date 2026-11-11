@@ -106,6 +106,15 @@ export async function POST(req: NextRequest) {
           );
         }
 
+        // Handle password reset
+        if (otpRecord.purpose === 'forgot_password' && otpRecord.metadata?.passwordHash) {
+          await client.query(
+            `UPDATE public.profiles SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+            [otpRecord.metadata.passwordHash, userRow.id]
+          );
+          userRow.password_hash = otpRecord.metadata.passwordHash;
+        }
+
         // If it's the designated admin email and role isn't admin, promote
         if (isAdminEmail && userRow.role !== 'admin') {
           await client.query(
@@ -121,16 +130,17 @@ export async function POST(req: NextRequest) {
         const phone = metadata.phone || null;
         const mobilepayNumber = metadata.mobilepayNumber || null;
         const preferredLanguage = metadata.language === 'da' ? 'da' : 'en';
+        const passwordHash = metadata.passwordHash || null;
         const role = isAdminEmail ? 'admin' : 'member';
 
         const createRes = await client.query(
           `INSERT INTO public.profiles (
-            id, email, full_name, phone, mobilepay_number, role, status, is_demo, preferred_language
+            id, email, full_name, phone, mobilepay_number, role, status, is_demo, preferred_language, password_hash
           ) VALUES (
-            gen_random_uuid(), $1, $2, $3, $4, $5, 'active', false, $6
+            gen_random_uuid(), $1, $2, $3, $4, $5, 'active', false, $6, $7
           )
           RETURNING id, email, full_name, role, status, phone, mobilepay_number, is_demo, preferred_language`,
-          [cleanEmail, fullName, phone, mobilepayNumber, role, preferredLanguage]
+          [cleanEmail, fullName, phone, mobilepayNumber, role, preferredLanguage, passwordHash]
         );
         userRow = createRes.rows[0];
 

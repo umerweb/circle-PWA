@@ -62,7 +62,7 @@ export default function BootstrapAdminPage() {
           <div className="w-12 h-12 rounded-full bg-emerald-700 text-white flex items-center justify-center mx-auto shadow-md">
             <ShieldCheck className="w-6 h-6 text-emerald-100" />
           </div>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             {t.auth.bootstrapTitle}
           </h1>
           <p className="text-xs text-slate-500">

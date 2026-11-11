@@ -151,7 +151,7 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             {t.reports.title}
           </h1>
           <p className="font-sans text-xs text-slate-500 mt-1">
@@ -196,7 +196,7 @@ export default function ReportsPage() {
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900">{r.period_label}</h2>
+                    <h2 className="font-heading text-base sm:text-lg font-bold text-slate-900">{r.period_label}</h2>
                     <span className="font-sans text-[11px] text-slate-500">
                       Statement created {formatDate(r.created_at)}
                     </span>

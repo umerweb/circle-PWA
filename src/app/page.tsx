@@ -125,7 +125,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               {t.dashboard.title}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 font-sans">
@@ -156,12 +156,12 @@ export default function DashboardPage() {
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white uppercase tracking-wider font-sans">
                 Circle Fund Danmark
               </span>
-              <span className="font-serif text-sm text-emerald-900 font-semibold">
+              <span className="font-heading text-sm text-emerald-950 font-bold">
                 Transparent 50 DKK Community Mutual Aid
               </span>
             </div>
             <p className="font-sans text-xs text-slate-600 max-w-xl leading-relaxed">
-              Sign in with secure email OTP to record your monthly MobilePay contributions, volunteer as a collector, and review transparent financial audits.
+              Sign in with your email and password to record your monthly MobilePay contributions, volunteer as a collector, and review transparent financial audits.
             </p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0">

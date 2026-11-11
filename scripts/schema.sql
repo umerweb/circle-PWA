@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'invited', 'suspended')),
     is_demo BOOLEAN NOT NULL DEFAULT false,
     preferred_language TEXT NOT NULL DEFAULT 'en' CHECK (preferred_language IN ('en', 'da')),
+    password_hash TEXT,
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -209,7 +210,7 @@ CREATE TABLE IF NOT EXISTS public.auth_otps (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT NOT NULL,
     otp_code TEXT NOT NULL,
-    purpose TEXT NOT NULL CHECK (purpose IN ('login', 'signup')),
+    purpose TEXT NOT NULL CHECK (purpose IN ('login', 'signup', 'forgot_password')),
     metadata JSONB DEFAULT '{}'::jsonb,
     attempts INTEGER NOT NULL DEFAULT 0,
     max_attempts INTEGER NOT NULL DEFAULT 5,

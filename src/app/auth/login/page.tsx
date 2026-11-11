@@ -7,7 +7,6 @@ import { useAuth } from '@/lib/auth';
 import {
   CircleDot,
   Mail,
-  KeyRound,
   User,
   AlertCircle,
   CheckCircle2,
@@ -17,6 +16,8 @@ import {
   UserPlus,
   LogIn,
   Lock,
+  KeyRound,
+  ArrowLeft,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -24,16 +25,16 @@ export default function LoginPage() {
   const { requestOtp, verifyOtp, signIn } = useAuth();
   const router = useRouter();
 
-  // Mode: 'signin' or 'signup'
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  // Mode: 'signin' | 'signup' | 'forgot_password'
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot_password'>('signin');
 
-  // Step: 1 = Enter email/details, 2 = Enter 6-digit OTP
+  // Step: 1 = Enter form details, 2 = Verify 6-digit OTP (for registration or password reset)
   const [step, setStep] = useState<1 | 2>(1);
 
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPasswordOption, setShowPasswordOption] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [mobilepayNumber, setMobilepayNumber] = useState('');
@@ -44,25 +45,10 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Cooldown countdown
+  // Cooldown countdown for OTP
   const [cooldown, setCooldown] = useState(0);
 
-  // Suggested action for edge cases
-  const [suggestedAction, setSuggestedAction] = useState<{
-    text: string;
-    action: () => void;
-  } | null>(null);
-
   const otpInputRef = useRef<HTMLInputElement>(null);
-
-  // Check if admin email is entered to offer direct password field
-  const isAdminEmail = email.trim().toLowerCase() === 'umer.web2@gmail.com';
-
-  useEffect(() => {
-    if (isAdminEmail) {
-      setShowPasswordOption(true);
-    }
-  }, [isAdminEmail]);
 
   // Timer effect for resend cooldown
   useEffect(() => {
@@ -80,14 +66,24 @@ export default function LoginPage() {
     }
   }, [step]);
 
-  // Handle Sign In with Password (e.g. umer.web2@gmail.com with 12345678)
-  const handlePasswordSignIn = async (e: React.FormEvent) => {
+  // DIRECT LOGIN (Email + Password - NO OTP NEEDED!)
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setLoading(true);
 
-    const res = await signIn(email.trim().toLowerCase(), password);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setError('Please provide your email address');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password');
+      return;
+    }
+
+    setLoading(true);
+    const res = await signIn(cleanEmail, password);
     setLoading(false);
 
     if (res.success) {
@@ -96,16 +92,15 @@ export default function LoginPage() {
         router.push('/');
       }, 500);
     } else {
-      setError(res.error || 'Authentication failed. Please verify your credentials.');
+      setError(res.error || 'Failed to sign in. Please check your credentials.');
     }
   };
 
-  // Handle Requesting OTP
+  // REGISTRATION & FORGOT PASSWORD (OTP Trigger)
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setSuggestedAction(null);
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) {
@@ -113,21 +108,34 @@ export default function LoginPage() {
       return;
     }
 
-    if (mode === 'signup' && (!fullName.trim() || fullName.trim().length < 2)) {
-      setError('Please enter your full name (minimum 2 characters)');
-      return;
+    if (mode === 'signup') {
+      if (!fullName.trim() || fullName.trim().length < 2) {
+        setError('Please enter your full name (minimum 2 characters)');
+        return;
+      }
+      if (!password || password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+    } else if (mode === 'forgot_password') {
+      if (!newPassword || newPassword.length < 6) {
+        setError('New password must be at least 6 characters long');
+        return;
+      }
     }
 
     setLoading(true);
 
     const res = await requestOtp({
       email: cleanEmail,
-      purpose: mode === 'signup' ? 'signup' : 'login',
+      purpose: mode === 'signup' ? 'signup' : 'forgot_password',
       fullName: mode === 'signup' ? fullName.trim() : undefined,
+      password: mode === 'signup' ? password : undefined,
+      newPassword: mode === 'forgot_password' ? newPassword : undefined,
       phone: mode === 'signup' && phone ? phone.trim() : undefined,
       mobilepayNumber: mode === 'signup' && mobilepayNumber ? mobilepayNumber.trim() : undefined,
       language: language as 'en' | 'da',
-    });
+    } as any);
 
     setLoading(false);
 
@@ -140,38 +148,14 @@ export default function LoginPage() {
           : `A 6-digit verification code has been sent to ${cleanEmail}`
       );
     } else {
-      setError(res.error || 'Failed to send verification code');
+      setError(res.error || 'Failed to dispatch verification code');
       if (res.cooldownSeconds) {
         setCooldown(res.cooldownSeconds);
-      }
-
-      // Edge Case: User tried to login but account does not exist
-      if (res.notRegistered) {
-        setSuggestedAction({
-          text: language === 'da' ? 'Opret konto nu' : 'Create an account now',
-          action: () => {
-            setMode('signup');
-            setError(null);
-            setSuggestedAction(null);
-          },
-        });
-      }
-
-      // Edge Case: User tried to signup but account already exists
-      if (res.alreadyRegistered) {
-        setSuggestedAction({
-          text: language === 'da' ? 'Log ind med denne e-mail' : 'Sign in with this email',
-          action: () => {
-            setMode('signin');
-            setError(null);
-            setSuggestedAction(null);
-          },
-        });
       }
     }
   };
 
-  // Handle Verifying OTP
+  // VERIFY OTP (Finalize Registration or Password Reset)
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -187,14 +171,16 @@ export default function LoginPage() {
     const res = await verifyOtp({
       email: email.trim().toLowerCase(),
       otpCode: cleanCode,
-      purpose: mode === 'signup' ? 'signup' : 'login',
-    });
+      purpose: mode === 'signup' ? 'signup' : 'forgot_password',
+    } as any);
 
     setLoading(false);
 
     if (res.success) {
       setSuccessMessage(
-        language === 'da' ? 'Verifikation gennemført! Sender dig videre...' : 'Verified! Redirecting to dashboard...'
+        mode === 'signup'
+          ? (language === 'da' ? 'Konto oprettet! Sender dig videre...' : 'Account created! Redirecting...')
+          : (language === 'da' ? 'Adgangskode nulstillet! Sender dig videre...' : 'Password reset! Redirecting...')
       );
       setTimeout(() => {
         router.push('/');
@@ -216,12 +202,14 @@ export default function LoginPage() {
 
     const res = await requestOtp({
       email: email.trim().toLowerCase(),
-      purpose: mode === 'signup' ? 'signup' : 'login',
+      purpose: mode === 'signup' ? 'signup' : 'forgot_password',
       fullName: mode === 'signup' ? fullName.trim() : undefined,
+      password: mode === 'signup' ? password : undefined,
+      newPassword: mode === 'forgot_password' ? newPassword : undefined,
       phone: mode === 'signup' && phone ? phone.trim() : undefined,
       mobilepayNumber: mode === 'signup' && mobilepayNumber ? mobilepayNumber.trim() : undefined,
       language: language as 'en' | 'da',
-    });
+    } as any);
 
     setLoading(false);
 
@@ -241,13 +229,13 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-[78vh] px-3.5 py-8">
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-9 space-y-7">
-        {/* Editorial Brand Header */}
+        {/* Urbanist Brand Header */}
         <div className="text-center space-y-2">
           <div className="w-11 h-11 rounded-full bg-emerald-700 text-white flex items-center justify-center mx-auto shadow-sm">
             <CircleDot className="w-5 h-5 text-emerald-100" />
           </div>
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
               Circle Fund
             </h1>
             <p className="font-sans text-xs text-slate-500 font-medium tracking-wide mt-1">
@@ -256,15 +244,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Tab Switcher: Sign In vs Create Account */}
-        {step === 1 && (
+        {/* Tab Switcher: Sign In vs Create Account (Only on Step 1) */}
+        {step === 1 && mode !== 'forgot_password' && (
           <div className="flex rounded-xl bg-slate-100/90 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => {
                 setMode('signin');
                 setError(null);
-                setSuggestedAction(null);
               }}
               className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 mode === 'signin'
@@ -280,7 +267,6 @@ export default function LoginPage() {
               onClick={() => {
                 setMode('signup');
                 setError(null);
-                setSuggestedAction(null);
               }}
               className={`flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 mode === 'signup'
@@ -294,22 +280,29 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* Forgot Password Header return button */}
+        {mode === 'forgot_password' && step === 1 && (
+          <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signin');
+                setError(null);
+              }}
+              className="inline-flex items-center gap-1 text-xs text-emerald-800 font-semibold hover:text-emerald-950"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>&larr; Back to Sign In</span>
+            </button>
+            <span className="text-xs font-semibold text-slate-600">Reset Password</span>
+          </div>
+        )}
+
         {/* Alerts / Error Feedback */}
         {error && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
-              <span className="font-medium leading-relaxed">{error}</span>
-            </div>
-            {suggestedAction && (
-              <button
-                type="button"
-                onClick={suggestedAction.action}
-                className="self-start text-[11px] font-bold text-rose-900 underline hover:text-rose-950 mt-0.5"
-              >
-                &rarr; {suggestedAction.text}
-              </button>
-            )}
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <span className="font-medium leading-relaxed">{error}</span>
           </div>
         )}
 
@@ -320,30 +313,85 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* STEP 1: Form */}
-        {step === 1 ? (
-          <form
-            onSubmit={showPasswordOption && password ? handlePasswordSignIn : handleRequestOtp}
-            className="space-y-4 text-xs font-sans"
-          >
-            {mode === 'signup' && (
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  {t.auth.fullNameLabel} *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    placeholder={t.auth.fullNamePlaceholder}
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
-                  />
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                </div>
+        {/* 1. SIGN IN MODE: Direct Email & Password (NO OTP) */}
+        {mode === 'signin' && step === 1 && (
+          <form onSubmit={handleSignIn} className="space-y-4 text-xs font-sans">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">
+                {t.auth.emailLabel} *
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  placeholder={t.auth.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               </div>
-            )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block font-semibold text-slate-700">
+                  Password *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('forgot_password');
+                    setError(null);
+                  }}
+                  className="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99] mt-2 font-sans"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>{loading ? t.common.loading : t.nav.signIn}</span>
+            </button>
+          </form>
+        )}
+
+        {/* 2. SIGN UP MODE: Registration details + Password + OTP Email Verification */}
+        {mode === 'signup' && step === 1 && (
+          <form onSubmit={handleRequestOtp} className="space-y-4 text-xs font-sans">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">
+                {t.auth.fullNameLabel} *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  placeholder={t.auth.fullNamePlaceholder}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1.5">
@@ -362,100 +410,123 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Administrator Password Option (automatically appears when umer.web2@gmail.com is typed or toggled) */}
-            {mode === 'signin' && (showPasswordOption || isAdminEmail) && (
-              <div className="space-y-1.5 pt-1 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <label className="block font-semibold text-slate-700">
-                    Administrator Password
-                  </label>
-                  <span className="text-[10px] text-slate-400 font-medium">Default: 12345678</span>
-                </div>
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">
+                Choose Password (minimum 6 characters) *
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  required
+                  placeholder="Create a strong password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {t.auth.mobilepayLabel}
+                </label>
                 <div className="relative">
                   <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
-                  />
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                </div>
-              </div>
-            )}
-
-            {mode === 'signup' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {t.auth.mobilepayLabel}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      placeholder={t.auth.mobilepayPlaceholder}
-                      value={mobilepayNumber}
-                      onChange={(e) => setMobilepayNumber(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-9 font-mono"
-                    />
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {t.auth.phoneLabel}
-                  </label>
-                  <input
                     type="tel"
-                    placeholder={t.auth.phonePlaceholder}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm font-mono"
+                    placeholder={t.auth.mobilepayPlaceholder}
+                    value={mobilepayNumber}
+                    onChange={(e) => setMobilepayNumber(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-9 font-mono"
                   />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 </div>
               </div>
-            )}
 
-            {mode === 'signup' && (
-              <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/60">
-                {t.auth.termsNotice}
-              </p>
-            )}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {t.auth.phoneLabel}
+                </label>
+                <input
+                  type="tel"
+                  placeholder={t.auth.phonePlaceholder}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm font-mono"
+                />
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+              {t.auth.termsNotice}
+            </p>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99] mt-2"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99] mt-2 font-sans"
             >
-              {password && showPasswordOption ? (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  <span>{loading ? t.common.loading : 'Sign In with Password'}</span>
-                </>
-              ) : (
-                <>
-                  <KeyRound className="w-4 h-4" />
-                  <span>{loading ? t.auth.sendingOtp : t.auth.sendOtp}</span>
-                </>
-              )}
+              <KeyRound className="w-4 h-4" />
+              <span>{loading ? 'Sending Verification Code...' : 'Verify Email & Create Account'}</span>
             </button>
-
-            {/* Toggle password option for sign in */}
-            {mode === 'signin' && !isAdminEmail && (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordOption(!showPasswordOption)}
-                  className="text-[11px] text-slate-400 hover:text-slate-600 underline font-medium"
-                >
-                  {showPasswordOption ? 'Use Email Code (OTP) instead' : 'Administrator password login'}
-                </button>
-              </div>
-            )}
           </form>
-        ) : (
-          /* STEP 2: Enter 6-Digit Verification Code */
+        )}
+
+        {/* 3. FORGOT PASSWORD MODE: Email + New Password + OTP Verification */}
+        {mode === 'forgot_password' && step === 1 && (
+          <form onSubmit={handleRequestOtp} className="space-y-4 text-xs font-sans">
+            <p className="text-xs text-slate-500">
+              Enter your account email and your new password. We will email you a 6-digit verification code to confirm the change.
+            </p>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">
+                Account Email Address *
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  placeholder={t.auth.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">
+                New Password (minimum 6 characters) *
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3.5 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-base sm:text-sm pl-10"
+                />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors shadow-sm disabled:opacity-50 text-sm active:scale-[0.99] mt-2 font-sans"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>{loading ? 'Sending Code...' : 'Send Verification Code'}</span>
+            </button>
+          </form>
+        )}
+
+        {/* STEP 2: Enter 6-Digit Verification Code (for Registration or Reset) */}
+        {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-5 text-xs font-sans">
             <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
               <div className="truncate">
@@ -481,7 +552,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-2 text-center">
+              <label className="block font-semibold text-slate-700 mb-2 text-center font-heading text-sm">
                 {t.auth.enterOtp}
               </label>
               <input
@@ -510,8 +581,8 @@ export default function LoginPage() {
                 {loading
                   ? t.common.loading
                   : mode === 'signup'
-                  ? t.auth.verifyAndSignUp
-                  : t.auth.verifyAndContinue}
+                  ? 'Confirm Code & Complete Registration'
+                  : 'Confirm Code & Reset Password'}
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -537,7 +608,7 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* Security / Privacy footnote */}
+        {/* Footer */}
         <p className="text-[11px] text-center text-slate-400 font-sans">
           Circle Fund Danmark · Sikkerhed og gennemsigtighed for fællesskabet.
         </p>

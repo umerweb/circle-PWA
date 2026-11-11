@@ -106,7 +106,7 @@ export function Navbar() {
                 <CircleDot className="w-5 h-5 text-emerald-100" />
               </div>
               <div>
-                <span className="font-serif text-lg font-bold tracking-tight text-slate-900 group-hover:text-emerald-800 transition-colors">
+                <span className="font-heading text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 group-hover:text-emerald-800 transition-colors">
                   Circle Fund
                 </span>
                 <span className="hidden md:block font-sans text-[10px] text-slate-500 font-medium tracking-wide uppercase">

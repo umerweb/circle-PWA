@@ -170,7 +170,7 @@ export const EmailTemplates = {
   },
 
   otp: {
-    en: (code: string, purpose: 'login' | 'signup', name?: string) => ({
+    en: (code: string, purpose: 'login' | 'signup' | 'forgot_password', name?: string) => ({
       subject: `Circle Fund: ${code} is your verification code`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;">
@@ -182,7 +182,11 @@ export const EmailTemplates = {
           <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
             <p style="color: #334155; font-size: 14px; margin: 0 0 16px 0;">
               ${name ? `Hello <strong>${name}</strong>,<br/>` : ''}
-              ${purpose === 'signup' ? 'Use this verification code to activate your new Circle Fund membership:' : 'Use this verification code to sign in to your Circle Fund account:'}
+              ${purpose === 'signup'
+                ? 'Use this verification code to activate your new Circle Fund membership:'
+                : purpose === 'forgot_password'
+                ? 'Use this verification code to reset your Circle Fund password:'
+                : 'Use this verification code to sign in to your Circle Fund account:'}
             </p>
             <div style="letter-spacing: 10px; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 34px; font-weight: 800; color: #15803d; padding: 14px 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: inline-block;">
               ${code}
@@ -198,7 +202,7 @@ export const EmailTemplates = {
       `,
       text: `Your Circle Fund verification code is: ${code}\nValid for 10 minutes.\nDo not share this code with anyone.\nIf you did not request this code, please ignore this email.`
     }),
-    da: (code: string, purpose: 'login' | 'signup', name?: string) => ({
+    da: (code: string, purpose: 'login' | 'signup' | 'forgot_password', name?: string) => ({
       subject: `Circle Fund: ${code} er din bekræftelseskode`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;">
@@ -210,7 +214,11 @@ export const EmailTemplates = {
           <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
             <p style="color: #334155; font-size: 14px; margin: 0 0 16px 0;">
               ${name ? `Hej <strong>${name}</strong>,<br/>` : ''}
-              ${purpose === 'signup' ? 'Brug denne bekræftelseskode til at aktivere dit nye Circle Fund medlemskab:' : 'Brug denne bekræftelseskode til at logge ind på din Circle Fund konto:'}
+              ${purpose === 'signup'
+                ? 'Brug denne bekræftelseskode til at aktivere dit nye Circle Fund medlemskab:'
+                : purpose === 'forgot_password'
+                ? 'Brug denne bekræftelseskode til at nulstille din adgangskode:'
+                : 'Brug denne bekræftelseskode til at logge ind på din Circle Fund konto:'}
             </p>
             <div style="letter-spacing: 10px; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 34px; font-weight: 800; color: #15803d; padding: 14px 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: inline-block;">
               ${code}
@@ -319,7 +327,7 @@ export async function sendOtpEmail({
   to: string;
   name?: string;
   code: string;
-  purpose: 'login' | 'signup';
+  purpose: 'login' | 'signup' | 'forgot_password';
   language?: 'en' | 'da';
 }): Promise<EmailDeliveryResult> {
   const templateBuilder = EmailTemplates.otp[language] || EmailTemplates.otp.en;

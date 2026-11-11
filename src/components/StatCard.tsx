@@ -23,7 +23,7 @@ export function StatCard({ title, value, subtitle, icon, trend, trendType = 'neu
             </div>
           )}
         </div>
-        <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 break-all sm:break-normal">
+        <div className="font-heading text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 break-all sm:break-normal">
           {value}
         </div>
       </div>

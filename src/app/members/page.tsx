@@ -155,7 +155,7 @@ export default function MembersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             {t.members.title}
           </h1>
           <p className="font-sans text-xs text-slate-500 mt-1">
@@ -204,7 +204,7 @@ export default function MembersPage() {
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
             {t.members.totalMembers}
           </span>
-          <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-900 mt-1">
+          <div className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mt-1">
             {summary?.total_members || members.length}
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function MembersPage() {
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
             {t.members.activeCount}
           </span>
-          <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-emerald-800 mt-1">
+          <div className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-emerald-800 mt-1">
             {summary?.active_count || members.filter((m) => m.status === 'active').length}
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function MembersPage() {
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block truncate font-sans">
               {t.members.demoCount}
             </span>
-            <div className="font-serif text-xl sm:text-3xl font-semibold tracking-tight text-slate-500 mt-1">
+            <div className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-500 mt-1">
               {summary?.demo_count || members.filter((m) => m.is_demo).length}
             </div>
           </div>

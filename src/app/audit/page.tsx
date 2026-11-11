@@ -31,7 +31,7 @@ export default function AuditPage() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="pb-3 border-b border-slate-200/80">
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
           {t.audit.title}
         </h1>
         <p className="font-sans text-xs text-slate-500 mt-1">

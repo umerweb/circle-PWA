@@ -173,7 +173,7 @@ export default function MonthlyFundPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               {t.fund.title}: {fund?.title}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 font-sans">

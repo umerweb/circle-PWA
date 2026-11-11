@@ -32,16 +32,16 @@ const config: Config = {
         }
       },
       fontFamily: {
-        serif: [
-          '"Newsreader"',
-          'Georgia',
-          'Cambria',
-          '"Times New Roman"',
-          'serif',
+        heading: [
+          '"Urbanist"',
+          '"Plus Jakarta Sans"',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'sans-serif',
         ],
         sans: [
           '"Plus Jakarta Sans"',
-          '"Inter"',
+          '"Urbanist"',
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
