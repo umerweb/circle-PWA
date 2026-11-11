@@ -46,21 +46,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify Password
-    if (isAdminEmail) {
-      // Admin demo fallback (12345678 or hashed password)
+    const isDemoSupervisor = cleanEmail === 'umer.web2@gmail.com';
+    if (isDemoSupervisor) {
+      // Demo supervisor fallback (12345678 or hashed password)
       const isDirectAdminPass = password === '12345678' || demoMode;
-      const isHashedAdminPass = password && verifyPassword(password, row.password_hash);
+      const isHashedAdminPass = password && row.password_hash ? verifyPassword(password, row.password_hash) : false;
       if (!isDirectAdminPass && !isHashedAdminPass) {
         return NextResponse.json(
-          { error: 'Incorrect administrator password. (Default demo pass: 12345678)' },
+          { error: 'Incorrect demo administrator password. (Default demo pass: 12345678)' },
           { status: 401 }
         );
       }
     } else {
-      // Standard member email + password check
+      // Real production users (both real admins and real members)
       if (!password) {
         return NextResponse.json(
           { error: 'Please enter your password to sign in.' },
+          { status: 400 }
+        );
+      }
+
+      if (!row.password_hash) {
+        return NextResponse.json(
+          { error: 'Password not set for this account. Please use "Forgot password?" to set one.' },
           { status: 400 }
         );
       }
@@ -82,7 +90,7 @@ export async function POST(req: NextRequest) {
       status: row.status,
       phone: row.phone,
       mobilepayNumber: row.mobilepay_number,
-      isDemo: Boolean(isAdminEmail || row.is_demo),
+      isDemo: Boolean(isDemoSupervisor || row.is_demo),
       preferredLanguage: row.preferred_language,
     };
 

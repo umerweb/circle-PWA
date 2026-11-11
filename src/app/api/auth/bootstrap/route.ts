@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { logAuditEvent } from '@/lib/audit';
+import { hashPassword } from '@/lib/password';
 
 export async function GET() {
   try {
@@ -8,7 +9,8 @@ export async function GET() {
       `
       SELECT id, email, full_name, role, status, is_demo, created_at
       FROM public.profiles
-      WHERE role = 'admin'
+      WHERE role = 'admin' AND is_demo = false
+      ORDER BY created_at ASC
       LIMIT 1;
     `
     );
@@ -17,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({
       configured: Boolean(admin),
-      adminEmail: admin ? admin.email : 'umer.web2@gmail.com',
+      adminEmail: admin ? admin.email : null,
       adminStatus: admin ? admin.status : 'not_configured',
     });
   } catch (error: any) {
@@ -28,35 +30,54 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, fullName } = await req.json();
+    const { email, password, fullName, phone, mobilepayNumber } = await req.json();
 
-    const targetEmail = (email || 'umer.web2@gmail.com').trim().toLowerCase();
+    const targetEmail = email ? String(email).trim().toLowerCase() : '';
 
-    // Verify target email is the authorized initial administrator
-    if (targetEmail !== 'umer.web2@gmail.com') {
+    if (!targetEmail || !targetEmail.includes('@')) {
       return NextResponse.json(
-        { error: 'Public registration is disabled. Only umer.web2@gmail.com is authorized as initial administrator.' },
-        { status: 403 }
+        { error: 'Please enter a valid administrator email address.' },
+        { status: 400 }
+      );
+    }
+
+    if (!fullName || fullName.trim().length < 2) {
+      return NextResponse.json(
+        { error: 'Please enter a full name for the administrator.' },
+        { status: 400 }
       );
     }
 
     if (!password || password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters long.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long.' },
+        { status: 400 }
+      );
     }
 
-    // Upsert admin profile
+    const passwordHash = hashPassword(password);
+
+    // Upsert real production admin profile
     const res = await query(
       `
-      INSERT INTO public.profiles (email, full_name, role, status, is_demo, preferred_language, notes)
-      VALUES ($1, $2, 'admin', 'active', false, 'en', 'Initial Super Administrator configured via bootstrap')
+      INSERT INTO public.profiles (
+        id, email, full_name, role, status, is_demo, preferred_language, password_hash, phone, mobilepay_number, notes
+      )
+      VALUES (
+        gen_random_uuid(), $1, $2, 'admin', 'active', false, 'en', $3, $4, $5, 'Production Super Administrator configured via bootstrap'
+      )
       ON CONFLICT (email) DO UPDATE SET
         full_name = EXCLUDED.full_name,
         role = 'admin',
         status = 'active',
+        is_demo = false,
+        password_hash = EXCLUDED.password_hash,
+        phone = COALESCE(EXCLUDED.phone, public.profiles.phone),
+        mobilepay_number = COALESCE(EXCLUDED.mobilepay_number, public.profiles.mobilepay_number),
         updated_at = now()
-      RETURNING *;
+      RETURNING id, email, full_name, role, status, phone, mobilepay_number, is_demo, preferred_language;
     `,
-      [targetEmail, fullName || 'Administrator (Umer)']
+      [targetEmail, fullName.trim(), passwordHash, phone || null, mobilepayNumber || null]
     );
 
     const admin = res.rows[0];
@@ -67,12 +88,12 @@ export async function POST(req: NextRequest) {
       entityId: admin.id,
       actorId: admin.id,
       actorEmail: admin.email,
-      details: { event: 'Administrator provisioned securely' },
+      details: { event: 'Real production administrator provisioned securely' },
     });
 
     const response = NextResponse.json({
       success: true,
-      message: 'Administrator account provisioned successfully.',
+      message: 'Production Super Administrator account provisioned successfully.',
       user: admin,
     });
 
